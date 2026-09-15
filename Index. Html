@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TooginTV | Media & Portfolio</title>
+    <style>
+        /* Base Styles & Reset */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #121418;
+            color: #ffffff;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Navigation Bar */
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.5rem 4rem;
+            background-color: #1a1d24;
+            border-bottom: 1px solid #2a2d35;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
+
+        .logo span {
+            color: #4ade80; /* Slight green accent for the 'TV' */
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+        }
+
+        .nav-links a {
+            color: #a0aec0;
+            text-decoration: none;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: color 0.3s;
+        }
+
+        .nav-links a:hover {
+            color: #ffffff;
+        }
+
+        .btn-watch {
+            background: linear-gradient(90deg, #38bdf8, #818cf8);
+            color: white;
+            padding: 0.6rem 1.5rem;
+            border-radius: 4px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 0.9rem;
+            transition: opacity 0.3s;
+        }
+
+        .btn-watch:hover {
+            opacity: 0.8;
+        }
+
+        /* Hero Section */
+        .hero {
+            text-align: center;
+            padding: 4rem 2rem;
+            /* Placeholder gradient to simulate a blurred studio background */
+            background: linear-gradient(to bottom, rgba(18, 20, 24, 0.7), #121418), 
+                        radial-gradient(circle at center, #2a2d35 0%, #121418 100%);
+        }
+
+        .hero h1 {
+            font-size: 3rem;
+            font-weight: 800;
+            letter-spacing: 2px;
+            margin-bottom: 1rem;
+            text-transform: uppercase;
+            color: #f8fafc;
+            text-shadow: 0 4px 10px rgba(0,0,0,0.5);
+        }
+
+        /* Card Grid Layout */
+        .portfolio-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+            flex-grow: 1;
+        }
+
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+
+        /* Card Base Styles */
+        .card {
+            background-color: #1a1d24;
+            border-radius: 8px;
+            padding: 2.5rem 1.5rem;
+            text-align: center;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+        .card-icon {
+            width: 48px;
+            height: 48px;
+            margin-bottom: 1.5rem;
+        }
+
+        .card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .card p {
+            font-size: 0.85rem;
+            color: #94a3b8;
+            line-height: 1.5;
+        }
+
+        /* Card Specific Glowing Borders & Colors */
+        .card-episodes {
+            border: 2px solid #3b82f6; /* Blue */
+            box-shadow: inset 0 0 15px rgba(59, 130, 246, 0.1), 0 0 15px rgba(59, 130, 246, 0.3);
+        }
+        .card-episodes .icon-fill { fill: #3b82f6; }
+        
+        .card-archive {
+            border: 2px solid #10b981; /* Green */
+            box-shadow: inset 0 0 15px rgba(16, 185, 129, 0.1), 0 0 15px rgba(16, 185, 129, 0.3);
+        }
+        .card-archive .icon-fill { fill: #10b981; }
+
+        .card-clips {
+            border: 2px solid #d946ef; /* Pink */
+            box-shadow: inset 0 0 15px rgba(217, 70, 239, 0.1), 0 0 15px rgba(217, 70, 239, 0.3);
+        }
+        .card-clips .icon-fill { fill: #d946ef; }
+
+        .card-merch {
+            border: 2px solid #f59e0b; /* Orange */
+            box-shadow: inset 0 0 15px rgba(245, 158, 11, 0.1), 0 0 15px rgba(245, 158, 11, 0.3);
+        }
+        .card-merch .icon-fill { fill: #f59e0b; }
+
+        /* Bottom Action Section */
+        .bottom-action {
+            text-align: center;
+            padding: 2rem 0 4rem 0;
+        }
+
+        .btn-watch-large {
+            background: linear-gradient(90deg, #38bdf8, #818cf8);
+            color: white;
+            padding: 1rem 3rem;
+            border-radius: 4px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 1.1rem;
+            letter-spacing: 1px;
+            transition: filter 0.3s;
+            display: inline-block;
+        }
+
+        .btn-watch-large:hover {
+            filter: brightness(1.2);
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            nav {
+                flex-direction: column;
+                gap: 1.5rem;
+                padding: 1.5rem;
+            }
+            .hero h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <nav>
+        <div class="logo">Toogin<span>TV</span></div>
+        <div class="nav-links">
+            <a href="#">Home</a>
+            <a href="#">Schedule</a>
+            <a href="#">Guests</a>
+            <a href="#">Community</a>
+        </div>
+        <a href="#" class="btn-watch">WATCH LIVE</a>
+    </nav>
+
+    <header class="hero">
+        <h1>MEDIA & PORTFOLIO</h1>
+    </header>
+
+    <main class="portfolio-container">
+        <div class="card-grid">
+            
+            <!-- Card 1: Episodes -->
+            <div class="card card-episodes">
+                <svg class="card-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path class="icon-fill" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/>
+                </svg>
+                <h2>Episodes</h2>
+                <p>Catch up on full musical variety streams, recent setlists, and previous Thursday broadcasts.</p>
+            </div>
+
+            <!-- Card 2: Artist Archive -->
+            <div class="card card-archive">
+                <svg class="card-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path class="icon-fill" d="M9.17 6l2 2H20v12H4V6h5.17M10 4H4c-1.1 0-1.99.9-1.99 2L2 20c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/>
+                </svg>
+                <h2>Artist Archive</h2>
+                <p>Featuring guest interviews and appearances from Johnny Blaze, Ben, and local performers.</p>
+            </div>
+
+            <!-- Card 3: Stream Clips -->
+            <div class="card card-clips">
+                <svg class="card-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path class="icon-fill" d="M18 4l2 4h-3l-2-4h-2l2 4h-3l-2-4H8l2 4H7L5 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V4h-4z"/>
+                </svg>
+                <h2>Stream Clips</h2>
+                <p>Highlights, promotional teaser videos, and custom riddles generated by Toddd.</p>
+            </div>
+
+            <!-- Card 4: Merch Shop -->
+            <div class="card card-merch">
+                <svg class="card-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path class="icon-fill" d="M21.99 8c0-.72-.37-1.35-.94-1.7L12 1 2.95 6.3C2.38 6.65 2 7.28 2 8v2h3v11h14V10h3V8zM6 19v-9h12v9H6z"/>
+                </svg>
+                <h2>Merch Shop</h2>
+                <p>Support the stream and grab official TooginTV apparel and broadcasting gear.</p>
+            </div>
+
+        </div>
+
+        <div class="bottom-action">
+            <a href="#" class="btn-watch-large">WATCH LIVE</a>
+        </div>
+    </main>
+
+</body>
+</html>
