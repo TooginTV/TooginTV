@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TooginTV - Home</title>
+    <title>TooginTV - Karaoke Event</title>
     <style>
         :root {
             --primary-cyan: #4ce0e4; 
@@ -81,6 +81,7 @@
             text-decoration: none;
             text-align: center;
             transition: transform 0.2s, background-color 0.2s;
+            display: inline-block;
         }
 
         .btn:hover {
@@ -99,6 +100,13 @@
             color: white;
         }
 
+        .btn-large {
+            padding: 1rem 2rem;
+            font-size: 1.2rem;
+            width: 100%;
+            margin-top: 1rem;
+        }
+
         main {
             width: 100%;
             max-width: 800px;
@@ -109,87 +117,42 @@
 
         .about-section {
             background-color: var(--container-bg);
-            padding: 1.5rem;
+            padding: 2.5rem;
             border-radius: 8px;
-            font-size: 1.1rem;
+            font-size: 1.2rem;
             line-height: 1.6;
             text-align: center;
             border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .about-section h1 {
+            color: var(--primary-pink);
+            margin-bottom: 1rem;
+            font-size: 2.5rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
         }
 
         .about-section p {
             margin-bottom: 1rem;
         }
 
-        .about-section p:last-child {
-            margin-bottom: 0;
-        }
-
-        .video-container {
-            width: 100%;
-            aspect-ratio: 16 / 9;
-            background-color: #000;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            border: 4px solid var(--primary-pink);
-            border-radius: 8px;
-            position: relative;
-            box-shadow: 0 8px 16px rgba(0,0,0,0.3);
-        }
-
-        .video-placeholder {
-            color: var(--primary-pink);
-            font-size: 1.5rem;
-            font-weight: bold;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-        }
-
-        .request-form {
+        .request-card {
             background-color: var(--form-bg);
             color: var(--form-text);
             padding: 2rem;
             border-radius: 8px;
             display: flex;
             flex-direction: column;
+            align-items: center;
             gap: 1rem;
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        }
-
-        .request-form h2 {
-            color: var(--primary-pink);
             text-align: center;
-            margin-bottom: 1rem;
+        }
+
+        .request-card h2 {
+            color: var(--primary-pink);
             font-size: 1.8rem;
-        }
-
-        .form-group {
-            display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
-        }
-
-        .form-group label {
-            font-weight: bold;
-        }
-
-        input {
-            padding: 0.75rem;
-            border: 2px solid #ccc;
-            border-radius: 4px;
-            font-size: 1rem;
-            background-color: var(--form-bg);
-            color: var(--form-text);
-        }
-
-        input:focus {
-            outline: none;
-            border-color: var(--primary-pink);
-        }
-
-        button[type="submit"] {
-            margin-top: 1rem;
         }
         
         @media (max-width: 600px) {
@@ -211,32 +174,24 @@
     <header>
         <img src="pink and blue.png" alt="TooginTV Logo" class="logo-img">
         <div class="header-controls">
-            <a href="karaoke.html" class="btn">Karaoke Event</a>
+            <a href="index.html" class="btn">Back to Home</a>
             <button class="btn btn-outline" id="themeToggle">Dark Mode</button>
         </div>
     </header>
 
     <main>
         <section class="about-section">
-            <p>Musicians spontaneously gather on Thursdays for some Toogin style jamming. We even take some requests.</p>
-            <p>Toogin is an ancient streaming art, Where talented musicians play whatever songs they feel like live to the internet, even if they don't all know how to play the song when they start it.</p>
+            <h1>Karaoke Band Event</h1>
+            <p>Get ready to take the stage! We are hosting a special live karaoke band event on <strong>December 13th</strong>.</p>
+            <p>Sing your heart out with a real, live band backing you up on the TooginTV stream!</p>
         </section>
 
-        <section class="video-container">
-            <div class="video-placeholder">LIVE STREAM OFFLINE</div>
-        </section>
-
-        <section class="request-form">
-            <h2>Request a Song for Tonight</h2>
-            <div class="form-group">
-                <label for="name">Your Name:</label>
-                <input type="text" id="name" placeholder="Enter your name">
-            </div>
-            <div class="form-group">
-                <label for="song">Song Request:</label>
-                <input type="text" id="song" placeholder="Song title & Artist">
-            </div>
-            <button type="submit" class="btn">Submit Request</button>
+        <section class="request-card">
+            <h2>What do you want to sing?</h2>
+            <p>Let us know what songs you want to perform so the band can get ready. Fill out our official Google Survey form below to submit your song requests!</p>
+            
+            <!-- REPLACE THE LINK BELOW WITH YOUR GOOGLE FORM LINK -->
+            <a href="YOUR_GOOGLE_FORM_LINK_HERE" target="_blank" class="btn btn-large">Open Song Request Form</a>
         </section>
     </main>
 
