@@ -3,270 +3,242 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TooginTV | Media & Portfolio</title>
+    <title>TooginTV</title>
     <style>
-        /* Base Styles & Reset */
+        :root {
+            --primary-cyan: #4ce0e4; 
+            --primary-pink: #eb74ab; 
+            --bg-color: var(--primary-cyan);
+            --text-color: #ffffff;
+            --container-bg: rgba(0, 0, 0, 0.1);
+            --form-bg: #ffffff;
+            --form-text: #000000;
+        }
+
+        body.dark-mode {
+            --bg-color: #000000; 
+            --text-color: #ffffff;
+            --container-bg: rgba(255, 255, 255, 0.1);
+            --form-bg: #222222;
+            --form-text: #ffffff;
+        }
+
         * {
+            box-sizing: border-box;
             margin: 0;
             padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Courier New', Courier, monospace;
         }
 
         body {
-            background-color: #121418;
-            color: #ffffff;
-            min-height: 100vh;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            transition: background-color 0.3s, color 0.3s;
             display: flex;
             flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            padding: 2rem;
         }
 
-        /* Navigation Bar */
-        nav {
+        header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 1.5rem 4rem;
-            background-color: #1a1d24;
-            border-bottom: 1px solid #2a2d35;
+            width: 100%;
+            max-width: 800px;
+            margin-bottom: 2rem;
         }
 
-        .logo {
-            font-size: 1.5rem;
+        /* Styling for the requested PNG logo */
+        .logo-img {
+            max-width: 280px;
+            height: auto;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            transition: transform 0.2s;
+        }
+
+        .logo-img:hover {
+            transform: scale(1.02);
+        }
+
+        .theme-toggle {
+            background-color: var(--primary-pink);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            font-size: 1rem;
             font-weight: bold;
-            letter-spacing: 1px;
+            cursor: pointer;
+            border-radius: 5px;
+            text-transform: uppercase;
+            transition: transform 0.2s, background-color 0.2s;
         }
 
-        .logo span {
-            color: #4ade80; /* Slight green accent for the 'TV' */
+        .theme-toggle:hover {
+            transform: scale(1.05);
+            background-color: #d65a92;
         }
 
-        .nav-links {
+        main {
+            width: 100%;
+            max-width: 800px;
             display: flex;
+            flex-direction: column;
             gap: 2rem;
         }
 
-        .nav-links a {
-            color: #a0aec0;
-            text-decoration: none;
-            font-size: 0.9rem;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            transition: color 0.3s;
-        }
-
-        .nav-links a:hover {
-            color: #ffffff;
-        }
-
-        .btn-watch {
-            background: linear-gradient(90deg, #38bdf8, #818cf8);
-            color: white;
-            padding: 0.6rem 1.5rem;
-            border-radius: 4px;
-            text-decoration: none;
-            font-weight: bold;
-            font-size: 0.9rem;
-            transition: opacity 0.3s;
-        }
-
-        .btn-watch:hover {
-            opacity: 0.8;
-        }
-
-        /* Hero Section */
-        .hero {
-            text-align: center;
-            padding: 4rem 2rem;
-            /* Placeholder gradient to simulate a blurred studio background */
-            background: linear-gradient(to bottom, rgba(18, 20, 24, 0.7), #121418), 
-                        radial-gradient(circle at center, #2a2d35 0%, #121418 100%);
-        }
-
-        .hero h1 {
-            font-size: 3rem;
-            font-weight: 800;
-            letter-spacing: 2px;
-            margin-bottom: 1rem;
-            text-transform: uppercase;
-            color: #f8fafc;
-            text-shadow: 0 4px 10px rgba(0,0,0,0.5);
-        }
-
-        /* Card Grid Layout */
-        .portfolio-container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 2rem;
-            flex-grow: 1;
-        }
-
-        .card-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 1.5rem;
-            margin-bottom: 3rem;
-        }
-
-        /* Card Base Styles */
-        .card {
-            background-color: #1a1d24;
+        .about-section {
+            background-color: var(--container-bg);
+            padding: 1.5rem;
             border-radius: 8px;
-            padding: 2.5rem 1.5rem;
+            font-size: 1.1rem;
+            line-height: 1.6;
             text-align: center;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-            cursor: pointer;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .about-section p {
+            margin-bottom: 1rem;
+        }
+
+        .about-section p:last-child {
+            margin-bottom: 0;
+        }
+
+        .video-container {
+            width: 100%;
+            aspect-ratio: 16 / 9;
+            background-color: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border: 4px solid var(--primary-pink);
+            border-radius: 8px;
+            position: relative;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+        }
+
+        .video-placeholder {
+            color: var(--primary-pink);
+            font-size: 1.5rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .request-form {
+            background-color: var(--form-bg);
+            color: var(--form-text);
+            padding: 2rem;
+            border-radius: 8px;
             display: flex;
             flex-direction: column;
-            align-items: center;
+            gap: 1rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         }
 
-        .card:hover {
-            transform: translateY(-5px);
-        }
-
-        .card-icon {
-            width: 48px;
-            height: 48px;
-            margin-bottom: 1.5rem;
-        }
-
-        .card h2 {
-            font-size: 1.25rem;
-            margin-bottom: 1rem;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        .card p {
-            font-size: 0.85rem;
-            color: #94a3b8;
-            line-height: 1.5;
-        }
-
-        /* Card Specific Glowing Borders & Colors */
-        .card-episodes {
-            border: 2px solid #3b82f6; /* Blue */
-            box-shadow: inset 0 0 15px rgba(59, 130, 246, 0.1), 0 0 15px rgba(59, 130, 246, 0.3);
-        }
-        .card-episodes .icon-fill { fill: #3b82f6; }
-        
-        .card-archive {
-            border: 2px solid #10b981; /* Green */
-            box-shadow: inset 0 0 15px rgba(16, 185, 129, 0.1), 0 0 15px rgba(16, 185, 129, 0.3);
-        }
-        .card-archive .icon-fill { fill: #10b981; }
-
-        .card-clips {
-            border: 2px solid #d946ef; /* Pink */
-            box-shadow: inset 0 0 15px rgba(217, 70, 239, 0.1), 0 0 15px rgba(217, 70, 239, 0.3);
-        }
-        .card-clips .icon-fill { fill: #d946ef; }
-
-        .card-merch {
-            border: 2px solid #f59e0b; /* Orange */
-            box-shadow: inset 0 0 15px rgba(245, 158, 11, 0.1), 0 0 15px rgba(245, 158, 11, 0.3);
-        }
-        .card-merch .icon-fill { fill: #f59e0b; }
-
-        /* Bottom Action Section */
-        .bottom-action {
+        .request-form h2 {
+            color: var(--primary-pink);
             text-align: center;
-            padding: 2rem 0 4rem 0;
+            margin-bottom: 1rem;
+            font-size: 1.8rem;
         }
 
-        .btn-watch-large {
-            background: linear-gradient(90deg, #38bdf8, #818cf8);
-            color: white;
-            padding: 1rem 3rem;
-            border-radius: 4px;
-            text-decoration: none;
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .form-group label {
             font-weight: bold;
-            font-size: 1.1rem;
-            letter-spacing: 1px;
-            transition: filter 0.3s;
-            display: inline-block;
         }
 
-        .btn-watch-large:hover {
-            filter: brightness(1.2);
+        input {
+            padding: 0.75rem;
+            border: 2px solid #ccc;
+            border-radius: 4px;
+            font-size: 1rem;
+            background-color: var(--form-bg);
+            color: var(--form-text);
         }
 
-        /* Responsive adjustments */
-        @media (max-width: 768px) {
-            nav {
+        input:focus {
+            outline: none;
+            border-color: var(--primary-pink);
+        }
+
+        button[type="submit"] {
+            background-color: var(--primary-pink);
+            color: white;
+            border: none;
+            padding: 1rem;
+            font-size: 1.2rem;
+            font-weight: bold;
+            cursor: pointer;
+            border-radius: 5px;
+            text-transform: uppercase;
+            margin-top: 1rem;
+            transition: background-color 0.2s;
+        }
+
+        button[type="submit"]:hover {
+            background-color: #d65a92;
+        }
+        
+        /* Mobile Responsiveness */
+        @media (max-width: 600px) {
+            header {
                 flex-direction: column;
                 gap: 1.5rem;
-                padding: 1.5rem;
-            }
-            .hero h1 {
-                font-size: 2rem;
             }
         }
     </style>
 </head>
 <body>
-
-    <nav>
-        <div class="logo">Toogin<span>TV</span></div>
-        <div class="nav-links">
-            <a href="#">Home</a>
-            <a href="#">Schedule</a>
-            <a href="#">Guests</a>
-            <a href="#">Community</a>
-        </div>
-        <a href="#" class="btn-watch">WATCH LIVE</a>
-    </nav>
-
-    <header class="hero">
-        <h1>MEDIA & PORTFOLIO</h1>
+    <header>
+        <!-- Calls your local image file -->
+        <img src="pink and blue.png" alt="TooginTV Logo" class="logo-img">
+        <button class="theme-toggle" id="themeToggle">Toggle Dark Mode</button>
     </header>
 
-    <main class="portfolio-container">
-        <div class="card-grid">
-            
-            <!-- Card 1: Episodes -->
-            <div class="card card-episodes">
-                <svg class="card-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path class="icon-fill" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/>
-                </svg>
-                <h2>Episodes</h2>
-                <p>Catch up on full musical variety streams, recent setlists, and previous Thursday broadcasts.</p>
+    <main>
+        <section class="about-section">
+            <p>Musicians spontaneously gather on Thursdays for some Toogin style jamming. We even take some requests.</p>
+            <p>Toogin is an ancient streaming art, Where talented musicians play whatever songs they feel like live to the internet, even if they don't all know how to play the song when they start it.</p>
+        </section>
+
+        <section class="video-container">
+            <div class="video-placeholder">LIVE STREAM OFFLINE</div>
+        </section>
+
+        <section class="request-form">
+            <h2>Request a Song</h2>
+            <div class="form-group">
+                <label for="name">Your Name:</label>
+                <input type="text" id="name" placeholder="Enter your name">
             </div>
-
-            <!-- Card 2: Artist Archive -->
-            <div class="card card-archive">
-                <svg class="card-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path class="icon-fill" d="M9.17 6l2 2H20v12H4V6h5.17M10 4H4c-1.1 0-1.99.9-1.99 2L2 20c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/>
-                </svg>
-                <h2>Artist Archive</h2>
-                <p>Featuring guest interviews and appearances from Johnny Blaze, Ben, and local performers.</p>
+            <div class="form-group">
+                <label for="song">Song Request:</label>
+                <input type="text" id="song" placeholder="Song title & Artist">
             </div>
-
-            <!-- Card 3: Stream Clips -->
-            <div class="card card-clips">
-                <svg class="card-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path class="icon-fill" d="M18 4l2 4h-3l-2-4h-2l2 4h-3l-2-4H8l2 4H7L5 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V4h-4z"/>
-                </svg>
-                <h2>Stream Clips</h2>
-                <p>Highlights, promotional teaser videos, and custom riddles generated by Toddd.</p>
-            </div>
-
-            <!-- Card 4: Merch Shop -->
-            <div class="card card-merch">
-                <svg class="card-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path class="icon-fill" d="M21.99 8c0-.72-.37-1.35-.94-1.7L12 1 2.95 6.3C2.38 6.65 2 7.28 2 8v2h3v11h14V10h3V8zM6 19v-9h12v9H6z"/>
-                </svg>
-                <h2>Merch Shop</h2>
-                <p>Support the stream and grab official TooginTV apparel and broadcasting gear.</p>
-            </div>
-
-        </div>
-
-        <div class="bottom-action">
-            <a href="#" class="btn-watch-large">WATCH LIVE</a>
-        </div>
+            <button type="submit">Submit Request</button>
+        </section>
     </main>
+
+    <script>
+        const toggleBtn = document.getElementById('themeToggle');
+        const body = document.body;
+
+        // Simple script to toggle the dark-mode class on the body
+        toggleBtn.addEventListener('click', () => {
+            body.classList.toggle('dark-mode');
+        });
+    </script>
+</body>
+</html>
 
 </body>
 </html>
