@@ -284,8 +284,8 @@
 
     <main>
         <section class="card about-section">
-            <p>📺 What is TooginTV?
-TooginTV is a music-related variety show that has been broadcasting live on Twitch every Thursday night for 4 years. Driven by the ancient streaming art of "Toogin-style" jamming, it's a weekly session where talented musicians spontaneously gather to play whatever songs they feel like live to the internet—taking requests and tackling tracks on the spot, even if they don't all know how to play the song when they start it!</p>
+		<h2>📺 What is TooginTV?</h2>
+            <p>TooginTV is a music-related variety show that has been broadcasting live on Twitch every Thursday night for 4 years. Driven by the ancient streaming art of "Toogin-style" jamming, it's a weekly session where talented musicians spontaneously gather to play whatever songs they feel like live to the internet—taking requests and tackling tracks on the spot, even if they don't all know how to play the song when they start it!</p>
         </section>
 
         <section class="card schedule-section">
@@ -319,7 +319,14 @@ TooginTV is a music-related variety show that has been broadcasting live on Twit
             body.classList.toggle('dark-mode');
         });
 
-        // --- Twitch Auto-VOD Logic ---
+        // --- Twitch Auto-VOD Logic (Thursday Filter) ---
+        // INSERT YOUR TWITCH API KEYS HERE
+        const TWITCH_CLIENT_ID = 'if7o5tu13xa76bvuxbpbylo3qnolzo';
+        const TWITCH_ACCESS_TOKEN = 'fjft4g44hptrqde0ijl7tk8flqj29u'; 
+        
+        // Fallback VOD if API keys are missing or no Thursday VOD exists
+        const FALLBACK_VOD_ID = '2887790332'; 
+
         const twitchOptions = {
             width: '100%',
             height: '100%',
@@ -334,25 +341,55 @@ TooginTV is a music-related variety show that has been broadcasting live on Twit
 
         player.addEventListener(Twitch.Player.READY, () => {
             player.addEventListener(Twitch.Player.OFFLINE, async () => {
-                console.log("Channel is offline. Fetching latest VOD...");
+                console.log("Channel is offline. Searching for the latest Thursday VOD...");
                 
                 try {
-                    // Uses a public proxy API to securely get the latest VOD text URL without exposing API keys
-                    const response = await fetch('https://decapi.me/twitch/latest_vod/toogintv');
-                    const vodUrl = await response.text();
+                    // 1. Get the Twitch User ID for TooginTV
+                    const userRes = await fetch('https://api.twitch.tv/helix/users?login=toogintv', {
+                        headers: {
+                            'Client-ID': TWITCH_CLIENT_ID,
+                            'Authorization': `Bearer ${TWITCH_ACCESS_TOKEN}`
+                        }
+                    });
+                    const userData = await userRes.json();
                     
-                    if (vodUrl.includes('twitch.tv/videos/')) {
-                        // Isolate the ID from the URL string
-                        const vodId = vodUrl.split('twitch.tv/videos/')[1].trim();
-                        console.log("Switching to latest VOD ID:", vodId);
-                        player.setVideo(vodId);
-                    } else {
-                        throw new Error("No recent VOD found");
+                    if (!userData.data || userData.data.length === 0) {
+                        throw new Error("Could not authenticate or find user.");
                     }
+                    const userId = userData.data[0].id;
+
+                    // 2. Fetch the 20 most recent archived VODs
+                    const videoRes = await fetch(`https://api.twitch.tv/helix/videos?user_id=${userId}&type=archive&first=20`, {
+                        headers: {
+                            'Client-ID': TWITCH_CLIENT_ID,
+                            'Authorization': `Bearer ${TWITCH_ACCESS_TOKEN}`
+                        }
+                    });
+                    const videoData = await videoRes.json();
+
+                    // 3. Find the first VOD recorded on a Thursday (converted to Edmonton time)
+                    let thursdayVodId = null;
+                    for (const video of videoData.data) {
+                        const date = new Date(video.created_at);
+                        const options = { timeZone: 'America/Edmonton', weekday: 'short' };
+                        const weekday = new Intl.DateTimeFormat('en-US', options).format(date);
+                        
+                        if (weekday === 'Thu') {
+                            thursdayVodId = video.id;
+                            break; // Stop at the most recent Thursday
+                        }
+                    }
+
+                    if (thursdayVodId) {
+                        console.log("Switching to Thursday VOD ID:", thursdayVodId);
+                        player.setVideo(thursdayVodId);
+                    } else {
+                        throw new Error("No recent Thursday VODs found.");
+                    }
+
                 } catch (error) {
-                    console.error("Error fetching latest VOD:", error, "- Loading fallback video.");
-                    // Fallback to the hardcoded ID if the API request fails
-                    player.setVideo('2887790332');
+                    console.error("API failed (check your keys) or no Thursday VOD found. Loading fallback.", error);
+                    player.setVideo(FALLBACK_VOD_ID);
                 }
             });
         });
