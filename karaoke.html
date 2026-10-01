@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TooginTV - Live Karaoke Event</title>
     
-    <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Montserrat:wght@700;800&display=swap" rel="stylesheet">
@@ -31,11 +30,7 @@
             --border-color: rgba(255, 255, 255, 0.1);
         }
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
 
         body {
             background-color: var(--bg-color);
@@ -50,9 +45,7 @@
             line-height: 1.6;
         }
 
-        h1, h2, h3, .brand-font {
-            font-family: 'Montserrat', sans-serif;
-        }
+        h1, h2, h3, .brand-font { font-family: 'Montserrat', sans-serif; }
 
         header {
             display: flex;
@@ -72,15 +65,9 @@
             transition: transform 0.3s ease;
         }
 
-        .logo-img:hover {
-            transform: translateY(-2px);
-        }
+        .logo-img:hover { transform: translateY(-2px); }
 
-        .header-controls {
-            display: flex;
-            gap: 1rem;
-            align-items: center;
-        }
+        .header-controls { display: flex; gap: 1rem; align-items: center; }
 
         .btn {
             background-color: var(--primary-pink);
@@ -101,11 +88,7 @@
             display: inline-block;
         }
 
-        .btn:hover {
-            background-color: var(--pink-hover);
-            transform: translateY(-2px);
-            box-shadow: 0 6px 15px rgba(235, 116, 171, 0.4);
-        }
+        .btn:hover { background-color: var(--pink-hover); transform: translateY(-2px); }
 
         .btn-outline {
             background-color: var(--card-bg);
@@ -114,31 +97,16 @@
             box-shadow: var(--card-shadow);
         }
 
-        .btn-outline:hover {
-            background-color: var(--primary-pink);
-            color: #ffffff;
-        }
+        .btn-outline:hover { background-color: var(--primary-pink); color: #ffffff; }
 
-        .btn-large {
-            padding: 1.2rem 2.5rem;
-            font-size: 1.1rem;
-            width: 100%;
-            max-width: 400px;
-            margin-top: 1.5rem;
-        }
+        .btn-large { padding: 1.2rem 2.5rem; font-size: 1.1rem; width: 100%; max-width: 400px; margin-top: 1.5rem; }
 
-        main {
-            width: 100%;
-            max-width: 900px;
-            display: flex;
-            flex-direction: column;
-            gap: 2.5rem;
-        }
+        main { width: 100%; max-width: 900px; display: flex; flex-direction: column; gap: 2.5rem; }
 
-        /* Cards with Prominent TV Static / Noise Texture */
+        /* Upgraded TV Static - Matches the heavier static of the index page */
         .card {
             background-color: var(--card-bg);
-            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.18'/%3E%3C/svg%3E");
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.35' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 12 -4' /%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.35'/%3E%3C/svg%3E");
             padding: 3rem 2.5rem;
             border-radius: 16px;
             box-shadow: var(--card-shadow);
@@ -156,39 +124,13 @@
             line-height: 1.2;
         }
 
-        .hero-section p {
-            font-size: 1.2rem;
-            margin-bottom: 1.5rem;
-            opacity: 0.9;
-        }
-        
-        .hero-section strong {
-            color: var(--primary-cyan);
-            font-size: 1.3rem;
-        }
-        
-        body:not(.dark-mode) .hero-section strong {
-            color: #d15d92; 
-        }
+        .hero-section p { font-size: 1.2rem; margin-bottom: 1.5rem; opacity: 0.9; }
+        .hero-section strong { color: var(--primary-cyan); font-size: 1.3rem; }
+        body:not(.dark-mode) .hero-section strong { color: #d15d92; }
 
-        .request-card {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 1rem;
-        }
-
-        .request-card h2 {
-            font-size: 2rem;
-            margin-bottom: 0.5rem;
-            color: var(--primary-cyan);
-        }
-
-        .request-card p {
-            font-size: 1.1rem;
-            opacity: 0.8;
-            max-width: 650px;
-        }
+        .request-card { display: flex; flex-direction: column; align-items: center; gap: 1rem; }
+        .request-card h2 { font-size: 2rem; margin-bottom: 0.5rem; color: var(--primary-cyan); }
+        .request-card p { font-size: 1.1rem; opacity: 0.8; max-width: 650px; line-height: 1.6;}
 
         .highlight-box {
             background-color: rgba(235, 116, 171, 0.1);
@@ -200,18 +142,9 @@
         }
 
         @media (max-width: 768px) {
-            header {
-                flex-direction: column;
-                gap: 1.5rem;
-            }
-            .header-controls {
-                width: 100%;
-                justify-content: center;
-                flex-wrap: wrap;
-            }
-            .hero-section h1 {
-                font-size: 2.2rem;
-            }
+            header { flex-direction: column; gap: 1.5rem; }
+            .header-controls { width: 100%; justify-content: center; flex-wrap: wrap; }
+            .hero-section h1 { font-size: 2.2rem; }
         }
     </style>
 </head>
@@ -226,32 +159,35 @@
 
     <main>
         <section class="card hero-section">
-            <h1>Karaoke Band Event</h1>
-            <p>Get ready to take the stage! We are hosting a special live karaoke band event on <strong>December 13th</strong>.</p>
-            <p>Sing your heart out with a real, live band backing you up directly on the TooginTV stream!</p>
+            <h1>Live Band Karaoke Event</h1>
+            <p>Get ready to take the stage with a real, live band backing you up on <strong>December 13th</strong>!</p>
+            <p>Because we're planning ahead, the floodgates are wide open—we are currently accepting any song request you can dream up.</p>
         </section>
 
         <section class="card request-card">
             <h2>What do you want to sing?</h2>
-            <p>Because we're planning ahead, the floodgates are currently wide open. As we get closer to the big night, limits will kick in and song choices will be strictly capped. Get your favorite tracks reserved now while anything goes!</p>
+            <p>Don't wait to submit your track: as we get closer to the big night, limits will kick in and song choices will be strictly capped. Get your favorite tracks reserved now while anything goes!</p>
             
             <div class="highlight-box">
                 When filling out the form below, please be sure to enter your requested songs in the exact format: <br>
                 <strong>"Song title" - "Artist"</strong>
             </div>
             
-            <!-- REPLACE THE LINK BELOW WITH YOUR GOOGLE FORM LINK -->
-            <a href="https://forms.gle/Tkx3Tgkoe2HbMn8a7" target="_blank" class="btn btn-large">Open Song Request Form</a>
+            <!-- This button uses config.js to fetch the link -->
+            <a href="#" id="karaokeFormBtn" target="_blank" class="btn btn-large">Open Song Request Form</a>
         </section>
     </main>
 
-    <script>
-        const toggleBtn = document.getElementById('themeToggle');
-        const body = document.body;
+    <!-- Load Config -->
+    <script src="config.js"></script>
 
-        toggleBtn.addEventListener('click', () => {
-            body.classList.toggle('dark-mode');
+    <script>
+        document.getElementById('themeToggle').addEventListener('click', () => {
+            document.body.classList.toggle('dark-mode');
         });
+
+        // Inject the Google Forms URL securely via config.js
+        document.getElementById('karaokeFormBtn').href = TOOGIN_CONFIG.KARAOKE_FORM_URL;
     </script>
 </body>
 </html>
