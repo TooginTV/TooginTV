@@ -17,7 +17,7 @@
             --primary-pink: #eb74ab; 
             --pink-hover: #d15d92;
             
-            /* Light Theme (Default) */
+            /* Light Theme */
             --bg-color: var(--primary-cyan);
             --text-color: #222222;
             --card-bg: #ffffff;
@@ -228,7 +228,7 @@
 
         /* --- Video Player --- */
         .video-wrapper {
-            padding: 0; /* Remove padding for edge-to-edge video inside card */
+            padding: 0; 
             overflow: hidden;
             border: 2px solid var(--primary-pink);
         }
@@ -239,8 +239,8 @@
             background-color: #000;
             position: relative;
         }
-
-        .video-container iframe {
+        
+        #twitch-embed iframe {
             position: absolute;
             top: 0;
             left: 0;
@@ -273,7 +273,7 @@
         }
     </style>
 </head>
-<body class="dark-mode"> <!-- Defaulting to dark mode for a professional streamer look -->
+<body class="dark-mode">
     <header>
         <img src="TooginLogo.png" alt="TooginTV Logo" class="logo-img">
         <div class="header-controls">
@@ -304,15 +304,12 @@
         </section>
 
         <section class="card video-wrapper">
-            <div class="video-container">
-                <!-- IMPORTANT: Change parent=localhost to your actual website domain before publishing -->
-                <iframe 
-                    src="https://player.twitch.tv/?channel=toogintv&parent=localhost&parent=127.0.0.1" 
-                    allowfullscreen="true">
-                </iframe>
-            </div>
+            <div class="video-container" id="twitch-embed"></div>
         </section>
     </main>
+
+    <!-- Load the official Twitch Embed JavaScript API -->
+    <script src="https://player.twitch.tv/js/embed/v1.js"></script>
 
     <script>
         // --- Theme Toggle ---
@@ -320,6 +317,44 @@
         const body = document.body;
         toggleBtn.addEventListener('click', () => {
             body.classList.toggle('dark-mode');
+        });
+
+        // --- Twitch Auto-VOD Logic ---
+        const twitchOptions = {
+            width: '100%',
+            height: '100%',
+            channel: 'toogintv',
+            // IMPORTANT: Change 'yourwebsite.com' to your actual domain name. 
+            parent: ['www.toogintv.com'],
+            autoplay: true,
+            muted: false
+        };
+
+        const player = new Twitch.Player("twitch-embed", twitchOptions);
+
+        player.addEventListener(Twitch.Player.READY, () => {
+            player.addEventListener(Twitch.Player.OFFLINE, async () => {
+                console.log("Channel is offline. Fetching latest VOD...");
+                
+                try {
+                    // Uses a public proxy API to securely get the latest VOD text URL without exposing API keys
+                    const response = await fetch('https://decapi.me/twitch/latest_vod/toogintv');
+                    const vodUrl = await response.text();
+                    
+                    if (vodUrl.includes('twitch.tv/videos/')) {
+                        // Isolate the ID from the URL string
+                        const vodId = vodUrl.split('twitch.tv/videos/')[1].trim();
+                        console.log("Switching to latest VOD ID:", vodId);
+                        player.setVideo(vodId);
+                    } else {
+                        throw new Error("No recent VOD found");
+                    }
+                } catch (error) {
+                    console.error("Error fetching latest VOD:", error, "- Loading fallback video.");
+                    // Fallback to the hardcoded ID if the API request fails
+                    player.setVideo('2887790332');
+                }
+            });
         });
 
         // --- Timezone & Countdown Logic ---
