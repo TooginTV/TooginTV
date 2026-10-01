@@ -3,42 +3,55 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TooginTV - Karaoke Event</title>
+    <title>TooginTV - Live Karaoke Event</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Montserrat:wght@700;800&display=swap" rel="stylesheet">
+    
     <style>
         :root {
             --primary-cyan: #4ce0e4; 
             --primary-pink: #eb74ab; 
+            --pink-hover: #d15d92;
+            
             --bg-color: var(--primary-cyan);
-            --text-color: #ffffff;
-            --container-bg: rgba(0, 0, 0, 0.1);
-            --form-bg: #ffffff;
-            --form-text: #000000;
+            --text-color: #222222;
+            --card-bg: #ffffff;
+            --card-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            --border-color: rgba(0, 0, 0, 0.05);
         }
 
         body.dark-mode {
-            --bg-color: #000000; 
-            --text-color: #ffffff;
-            --container-bg: rgba(255, 255, 255, 0.1);
-            --form-bg: #222222;
-            --form-text: #ffffff;
+            --bg-color: #0d0d0d; 
+            --text-color: #f5f5f5;
+            --card-bg: #1a1a1a;
+            --card-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            --border-color: rgba(255, 255, 255, 0.05);
         }
 
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
-            font-family: 'Courier New', Courier, monospace;
         }
 
         body {
             background-color: var(--bg-color);
             color: var(--text-color);
-            transition: background-color 0.3s, color 0.3s;
+            font-family: 'Inter', sans-serif;
+            transition: background-color 0.4s ease, color 0.4s ease;
             display: flex;
             flex-direction: column;
             align-items: center;
             min-height: 100vh;
-            padding: 2rem;
+            padding: 0 1.5rem 3rem 1.5rem;
+            line-height: 1.6;
+        }
+
+        h1, h2, h3, .brand-font {
+            font-family: 'Montserrat', sans-serif;
         }
 
         header {
@@ -46,8 +59,21 @@
             justify-content: space-between;
             align-items: center;
             width: 100%;
-            max-width: 800px;
+            max-width: 900px;
+            padding: 2rem 0;
             margin-bottom: 2rem;
+        }
+
+        .logo-img {
+            max-width: 220px;
+            height: auto;
+            border-radius: 8px;
+            box-shadow: var(--card-shadow);
+            transition: transform 0.3s ease;
+        }
+
+        .logo-img:hover {
+            transform: translateY(-2px);
         }
 
         .header-controls {
@@ -56,140 +82,148 @@
             align-items: center;
         }
 
-        .logo-img {
-            max-width: 280px;
-            height: auto;
-            border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-            transition: transform 0.2s;
-        }
-
-        .logo-img:hover {
-            transform: scale(1.02);
-        }
-
         .btn {
             background-color: var(--primary-pink);
-            color: white;
+            color: #ffffff;
             border: none;
-            padding: 0.75rem 1.5rem;
-            font-size: 1rem;
-            font-weight: bold;
+            padding: 0.8rem 1.5rem;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 0.9rem;
+            font-weight: 700;
             cursor: pointer;
-            border-radius: 5px;
+            border-radius: 50px;
             text-transform: uppercase;
             text-decoration: none;
             text-align: center;
-            transition: transform 0.2s, background-color 0.2s;
+            letter-spacing: 0.5px;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 10px rgba(235, 116, 171, 0.3);
             display: inline-block;
         }
 
         .btn:hover {
-            transform: scale(1.05);
-            background-color: #d65a92;
+            background-color: var(--pink-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(235, 116, 171, 0.4);
         }
 
         .btn-outline {
-            background-color: transparent;
+            background-color: var(--card-bg);
             border: 2px solid var(--primary-pink);
             color: var(--text-color);
+            box-shadow: var(--card-shadow);
         }
 
         .btn-outline:hover {
             background-color: var(--primary-pink);
-            color: white;
+            color: #ffffff;
         }
 
         .btn-large {
-            padding: 1rem 2rem;
-            font-size: 1.2rem;
+            padding: 1.2rem 2.5rem;
+            font-size: 1.1rem;
             width: 100%;
-            margin-top: 1rem;
+            max-width: 400px;
+            margin-top: 1.5rem;
         }
 
         main {
             width: 100%;
-            max-width: 800px;
+            max-width: 900px;
             display: flex;
             flex-direction: column;
-            gap: 2rem;
+            gap: 2.5rem;
         }
 
-        .about-section {
-            background-color: var(--container-bg);
-            padding: 2.5rem;
-            border-radius: 8px;
-            font-size: 1.2rem;
-            line-height: 1.6;
+        .card {
+            background-color: var(--card-bg);
+            padding: 3rem 2.5rem;
+            border-radius: 16px;
+            box-shadow: var(--card-shadow);
+            border: 1px solid var(--border-color);
+            transition: background-color 0.4s ease, border 0.4s ease;
             text-align: center;
-            border: 2px solid rgba(255, 255, 255, 0.2);
         }
-        
-        .about-section h1 {
+
+        .hero-section h1 {
             color: var(--primary-pink);
             margin-bottom: 1rem;
-            font-size: 2.5rem;
+            font-size: 2.8rem;
             text-transform: uppercase;
-            letter-spacing: 2px;
+            letter-spacing: 1px;
+            line-height: 1.2;
         }
 
-        .about-section p {
-            margin-bottom: 1rem;
+        .hero-section p {
+            font-size: 1.2rem;
+            margin-bottom: 1.5rem;
+            opacity: 0.9;
+        }
+        
+        .hero-section strong {
+            color: var(--primary-cyan);
+            font-size: 1.3rem;
+        }
+        
+        body:not(.dark-mode) .hero-section strong {
+            color: #d15d92; /* Darker pink for better contrast on light mode */
         }
 
         .request-card {
-            background-color: var(--form-bg);
-            color: var(--form-text);
-            padding: 2rem;
-            border-radius: 8px;
             display: flex;
             flex-direction: column;
             align-items: center;
             gap: 1rem;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            text-align: center;
         }
 
         .request-card h2 {
-            color: var(--primary-pink);
-            font-size: 1.8rem;
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
         }
-        
-        @media (max-width: 600px) {
+
+        .request-card p {
+            font-size: 1.1rem;
+            opacity: 0.8;
+            max-width: 600px;
+        }
+
+        @media (max-width: 768px) {
             header {
                 flex-direction: column;
                 gap: 1.5rem;
             }
             .header-controls {
-                flex-direction: column;
                 width: 100%;
+                justify-content: center;
+                flex-wrap: wrap;
             }
-            .header-controls .btn {
-                width: 100%;
+            .hero-section h1 {
+                font-size: 2.2rem;
             }
         }
     </style>
 </head>
-<body>
+<body class="dark-mode"> <!-- Defaulting to dark mode to match index.html -->
     <header>
         <img src="TooginLogo.png" alt="TooginTV Logo" class="logo-img">
         <div class="header-controls">
             <a href="index.html" class="btn">Back to Home</a>
-            <button class="btn btn-outline" id="themeToggle">Dark Mode</button>
+            <button class="btn btn-outline" id="themeToggle">Toggle Theme</button>
         </div>
     </header>
 
     <main>
-        <section class="about-section">
+        <section class="card hero-section">
             <h1>Karaoke Band Event</h1>
             <p>Get ready to take the stage! We are hosting a special live karaoke band event on <strong>December 13th</strong>.</p>
-            <p>Sing your heart out with a real, live band backing you up on the TooginTV stream!</p>
+            <p>Sing your heart out with a real, live band backing you up directly on the TooginTV stream!</p>
         </section>
 
-        <section class="request-card">
+        <section class="card request-card">
             <h2>What do you want to sing?</h2>
-            <p>Let us know what songs you want to perform so the band can get ready. Fill out our official Google Survey form below to submit your song requests!</p>
+            <p>Let us know what songs you want to perform so the band can get ready. Fill out our official Google Survey form below to secure your song.</p>
             
+            <!-- REPLACE THE LINK BELOW WITH YOUR GOOGLE FORM LINK -->
             <a href="YOUR_GOOGLE_FORM_LINK_HERE" target="_blank" class="btn btn-large">Open Song Request Form</a>
         </section>
     </main>
