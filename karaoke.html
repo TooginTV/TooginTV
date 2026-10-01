@@ -19,16 +19,16 @@
             --bg-color: var(--primary-cyan);
             --text-color: #222222;
             --card-bg: #ffffff;
-            --card-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-            --border-color: rgba(0, 0, 0, 0.05);
+            --card-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            --border-color: rgba(0, 0, 0, 0.1);
         }
 
         body.dark-mode {
             --bg-color: #0d0d0d; 
             --text-color: #f5f5f5;
             --card-bg: #1a1a1a;
-            --card-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-            --border-color: rgba(255, 255, 255, 0.05);
+            --card-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+            --border-color: rgba(255, 255, 255, 0.1);
         }
 
         * {
@@ -135,14 +135,14 @@
             gap: 2.5rem;
         }
 
-        /* Cards with TV Static / Noise Texture */
+        /* Cards with Prominent TV Static / Noise Texture */
         .card {
             background-color: var(--card-bg);
-            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.08'/%3E%3C/svg%3E");
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.18'/%3E%3C/svg%3E");
             padding: 3rem 2.5rem;
             border-radius: 16px;
             box-shadow: var(--card-shadow);
-            border: 1px solid var(--border-color);
+            border: 2px solid var(--border-color);
             transition: background-color 0.4s ease, border 0.4s ease;
             text-align: center;
         }
@@ -241,7 +241,7 @@
             </div>
             
             <!-- REPLACE THE LINK BELOW WITH YOUR GOOGLE FORM LINK -->
-            <a href="https://forms.gle/bus9go5eY5yxmSQY9" target="_blank" class="btn btn-large">Open Song Request Form</a>
+            <a href="https://forms.gle/Tkx3Tgkoe2HbMn8a7" target="_blank" class="btn btn-large">Open Song Request Form</a>
         </section>
     </main>
 

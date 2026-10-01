@@ -21,8 +21,8 @@
             --bg-color: var(--primary-cyan);
             --text-color: #222222;
             --card-bg: #ffffff;
-            --card-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-            --border-color: rgba(0, 0, 0, 0.05);
+            --card-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            --border-color: rgba(0, 0, 0, 0.1);
         }
 
         body.dark-mode {
@@ -30,8 +30,8 @@
             --bg-color: #0d0d0d; 
             --text-color: #f5f5f5;
             --card-bg: #1a1a1a;
-            --card-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-            --border-color: rgba(255, 255, 255, 0.05);
+            --card-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+            --border-color: rgba(255, 255, 255, 0.1);
         }
 
         * {
@@ -134,7 +134,7 @@
             color: #000000;
         }
 
-        /* --- Layout & Cards with Static/Noise Texture --- */
+        /* --- Layout & Cards with Prominent TV Static / Grunge Texture --- */
         main {
             width: 100%;
             max-width: 900px;
@@ -145,12 +145,12 @@
 
         .card {
             background-color: var(--card-bg);
-            /* TV Static / Grunge Noise Texture Overlay mimicking the logo */
-            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.08'/%3E%3C/svg%3E");
+            /* Heavy distressed TV static texture overlay matching the logo */
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.18'/%3E%3C/svg%3E");
             padding: 2.5rem;
             border-radius: 16px;
             box-shadow: var(--card-shadow);
-            border: 1px solid var(--border-color);
+            border: 2px solid var(--border-color);
             transition: background-color 0.4s ease, border 0.4s ease;
         }
 
@@ -224,8 +224,8 @@
             padding: 1.2rem;
             border-radius: 12px;
             min-width: 90px;
-            border: 2px solid rgba(235, 116, 171, 0.2);
-            transition: background-color 0.4s ease;
+            border: 2px solid rgba(235, 116, 171, 0.3);
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.1);
         }
 
         .time-box span {
@@ -241,7 +241,7 @@
             text-transform: uppercase;
             font-size: 0.8rem;
             margin-top: 0.5rem;
-            opacity: 0.7;
+            opacity: 0.8;
             letter-spacing: 1px;
         }
 
@@ -382,7 +382,538 @@
             <section class="card tiktok-content-section">
                 <h2>TikTok Shorts & Dramas</h2>
                 <p>Looking for fun bite-sized content between our live Thursday jams?</p>
-                <p>Check out our latest <a href="https://www.tiktok.com/@toogintvofficial" target="_blank" class="text-link">short dramas and TikTok videos</a> to see behind-the-scenes moments and viral highlights[cite: 1]!</p>
+                <p>Check out our latest <a href="https://www.tiktok.com/@toogintvofficial" target="_blank" class="text-link">short dramas and TikTok videos</a> to see behind-the-scenes moments and viral highlights!</p>
+            </section>
+        </div>
+    </main>
+
+    <!-- Load the official Twitch Embed JavaScript API -->
+    <script src="https://player.twitch.tv/js/embed/v1.js"></script>
+    
+    <!-- Load Configuration Keys and Variables -->
+    <script src="config.js"></script>
+
+    <script>
+        // --- Theme Toggle ---
+        const toggleBtn = document.getElementById('themeToggle');
+        const body = document.body;
+        toggleBtn.addEventListener('click', () => {
+            body.classList.toggle('dark-mode');
+        });
+
+        // --- Twitch Auto-VOD Logic (Thursday Filter) ---
+        const twitchOptions = {
+            width: '100%',
+            height: '100%',
+            channel: 'toogintv',
+            parent: TOOGIN_CONFIG.TWITCH_PARENT_DOMAINS,
+            autoplay: true,
+            muted: false
+        };
+
+        const player = new Twitch.Player("twitch-embed", twitchOptions);
+
+        player.addEventListener(Twitch.Player.READY, () => {
+            player.addEventListener(Twitch.Player.OFFLINE, async () => {
+                console.log("Channel is offline. Searching for the latest Thursday VOD...");
+                
+                try {
+                    const userRes = await fetch('https://api.twitch.tv/helix/users?login=toogintv', {
+                        headers: {
+                            'Client-ID': TOOGIN_CONFIG.TWITCH_CLIENT_ID,
+                            'Authorization': `Bearer ${TOOGIN_CONFIG.TWITCH_ACCESS_TOKEN}`
+                        }
+                    });
+                    const userData = await userRes.json();
+                    
+                    if (!userData.data || userData.data.length === 0) {
+                        throw new Error("Could not authenticate or find user.");
+                    }
+                    const userId = userData.data[0].id;
+
+                    const videoRes = await fetch(`https://api.twitch.tv/helix/videos?user_id=${userId}&type=archive&first=20`, {
+                        headers: {
+                            'Client-ID': TOOGIN_CONFIG.TWITCH_CLIENT_ID,
+                            'Authorization': `Bearer ${TOOGIN_CONFIG.TWITCH_ACCESS_TOKEN}`
+                        }
+                    });
+                    const videoData = await videoRes.json();
+
+                    let thursdayVodId = null;
+                    for (const video of videoData.data) {
+                        const date = new Date(video.created_at);
+                        const options = { timeZone: 'America/Edmonton', weekday: 'short' };
+                        const weekday = new Intl.DateTimeFormat('en-US', options).format(date);
+                        
+                        if (weekday === 'Thu') {
+                            thursdayVodId = video.id;
+                            break; 
+                        }
+                    }
+
+                    if (thursdayVodId) {
+                        console.log("Switching to Thursday VOD ID:", thursdayVodId);
+                        player.setVideo(thursdayVodId);
+                    } else {
+                        throw new Error("No recent Thursday VODs found.");
+                    }
+
+                } catch (error) {
+                    console.error("API failed (check your keys) or no Thursday VOD found. Loading fallback.", error);
+                    player.setVideo(TOOGIN_CONFIG.FALLBACK_VOD_ID);
+                }
+            });
+        });
+
+        // --- Timezone & Countdown Logic ---
+        function getNextBroadcastTime() {
+            const now = new Date();
+            let startSearch = new Date(now.getFullYear(), now.getMonth(), now.getDate(), now.getHours());
+            
+            for (let i = 0; i < 14 * 24; i++) {
+                let tempDate = new Date(startSearch.getTime() + i * 3600000);
+                
+                let parts = new Intl.DateTimeFormat('en-US', {
+                    timeZone: 'America/Edmonton',
+                    weekday: 'short',
+                    hour: 'numeric',
+                    hour12: true
+                }).formatToParts(tempDate);
+                
+                let weekday = parts.find(p => p.type === 'weekday').value;
+                let hour = parts.find(p => p.type === 'hour').value;
+                let ampm = parts.find(p => p.type === 'dayPeriod' || p.type === 'ampm');
+                let ampmVal = ampm ? ampm.value.toUpperCase() : '';
+
+                let is8PM = (hour === '8' && ampmVal.includes('PM')) || hour === '20';
+
+                if (weekday === 'Thu' && is8PM) {
+                    if (tempDate > now) {
+                        return tempDate;
+                    }
+                }
+            }
+            return now; 
+        }
+
+        const broadcastDate = getNextBroadcastTime();
+        
+        const localTimeStr = broadcastDate.toLocaleTimeString([], { 
+            hour: 'numeric', 
+            minute: '2-digit', 
+            timeZoneName: 'short' 
+        });
+        document.getElementById('localTimeDisplay').textContent = localTimeStr;
+
+        function updateCountdown() {
+            const now = new Date().getTime();
+            const distance = broadcastDate.getTime() - now;
+
+            if (distance < 0) {
+                document.getElementById("countdown").innerHTML = "<h3 class='brand-font' style='color: var(--primary-pink); font-size: 2rem; margin-top: 1rem;'>WE ARE LIVE!</h3>";
+                return;
+            }
+
+            const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+            document.getElementById("days").innerText = String(days).padStart(2, '0');
+            document.getElementById("hours").innerText = String(hours).padStart(2, '0');
+            document.getElementById("mins").innerText = String(minutes).padStart(2, '0');
+            document.getElementById("secs").innerText = String(seconds).padStart(2, '0');
+        }
+
+        setInterval(updateCountdown, 1000);
+        updateCountdown();
+    </script>
+</body>
+</html><!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TooginTV - Live Stream & Jam Sessions</title>
+    
+    <!-- Google Fonts for professional typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Montserrat:wght@700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            /* Brand Colors */
+            --primary-cyan: #4ce0e4; 
+            --primary-pink: #eb74ab; 
+            --pink-hover: #d15d92;
+            
+            /* Light Theme */
+            --bg-color: var(--primary-cyan);
+            --text-color: #222222;
+            --card-bg: #ffffff;
+            --card-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            --border-color: rgba(0, 0, 0, 0.1);
+        }
+
+        body.dark-mode {
+            /* Dark Theme */
+            --bg-color: #0d0d0d; 
+            --text-color: #f5f5f5;
+            --card-bg: #1a1a1a;
+            --card-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+            --border-color: rgba(255, 255, 255, 0.1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Inter', sans-serif;
+            transition: background-color 0.4s ease, color 0.4s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            padding: 0 1.5rem 3rem 1.5rem;
+            line-height: 1.6;
+        }
+
+        h1, h2, h3, .brand-font {
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        /* --- Header & Navigation --- */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            max-width: 900px;
+            padding: 2rem 0;
+            margin-bottom: 2rem;
+        }
+
+        .logo-img {
+            max-width: 220px;
+            height: auto;
+            border-radius: 8px;
+            box-shadow: var(--card-shadow);
+            transition: transform 0.3s ease;
+        }
+
+        .logo-img:hover {
+            transform: translateY(-2px);
+        }
+
+        .header-controls {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        /* --- Buttons --- */
+        .btn {
+            background-color: var(--primary-pink);
+            color: #ffffff;
+            border: none;
+            padding: 0.8rem 1.5rem;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 0.9rem;
+            font-weight: 700;
+            cursor: pointer;
+            border-radius: 50px;
+            text-transform: uppercase;
+            text-decoration: none;
+            text-align: center;
+            letter-spacing: 0.5px;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 10px rgba(235, 116, 171, 0.3);
+        }
+
+        .btn:hover {
+            background-color: var(--pink-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(235, 116, 171, 0.4);
+        }
+
+        .btn-outline {
+            background-color: var(--card-bg);
+            border: 2px solid var(--primary-pink);
+            color: var(--text-color);
+            box-shadow: var(--card-shadow);
+        }
+
+        .btn-outline:hover {
+            background-color: var(--primary-pink);
+            color: #ffffff;
+        }
+
+        .btn-social {
+            background-color: var(--card-bg);
+            border: 2px solid var(--primary-cyan);
+            color: var(--text-color);
+        }
+
+        .btn-social:hover {
+            background-color: var(--primary-cyan);
+            color: #000000;
+        }
+
+        /* --- Layout & Cards with Prominent TV Static / Grunge Texture --- */
+        main {
+            width: 100%;
+            max-width: 900px;
+            display: flex;
+            flex-direction: column;
+            gap: 2.5rem;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            /* Heavy distressed TV static texture overlay matching the logo */
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.18'/%3E%3C/svg%3E");
+            padding: 2.5rem;
+            border-radius: 16px;
+            box-shadow: var(--card-shadow);
+            border: 2px solid var(--border-color);
+            transition: background-color 0.4s ease, border 0.4s ease;
+        }
+
+        .about-section {
+            text-align: center;
+            font-size: 1.1rem;
+        }
+
+        .about-section h2 {
+            color: var(--primary-pink);
+            margin-bottom: 1rem;
+            font-size: 1.8rem;
+        }
+
+        .about-section p {
+            margin-bottom: 1rem;
+            color: inherit;
+            opacity: 0.9;
+        }
+
+        .about-section p:last-child {
+            margin-bottom: 0;
+        }
+
+        /* --- Schedule & Countdown --- */
+        .schedule-section {
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .schedule-section h2 {
+            color: var(--primary-pink);
+            font-size: 1.8rem;
+            letter-spacing: 1px;
+        }
+
+        .schedule-text {
+            font-size: 1.1rem;
+            font-weight: 500;
+        }
+
+        .local-time {
+            color: #ffffff;
+            background: var(--primary-cyan);
+            padding: 0.3rem 0.8rem;
+            border-radius: 6px;
+            font-weight: 700;
+            display: inline-block;
+            margin-top: 0.5rem;
+        }
+
+        body.dark-mode .local-time {
+            color: #000000;
+        }
+
+        .countdown {
+            display: flex;
+            gap: 1.5rem;
+            justify-content: center;
+            margin-top: 1rem;
+        }
+
+        .time-box {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: var(--bg-color);
+            padding: 1.2rem;
+            border-radius: 12px;
+            min-width: 90px;
+            border: 2px solid rgba(235, 116, 171, 0.3);
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .time-box span {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: var(--primary-pink);
+            line-height: 1;
+        }
+
+        .time-box small {
+            font-weight: 500;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            margin-top: 0.5rem;
+            opacity: 0.8;
+            letter-spacing: 1px;
+        }
+
+        /* --- Video Player --- */
+        .video-wrapper {
+            padding: 0; 
+            overflow: hidden;
+            border: 2px solid var(--primary-pink);
+        }
+
+        .video-container {
+            width: 100%;
+            aspect-ratio: 16 / 9;
+            background-color: #000;
+            position: relative;
+        }
+        
+        #twitch-embed iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        /* --- Community & TikTok Content Section --- */
+        .grid-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2.5rem;
+        }
+
+        .community-section, .tiktok-content-section {
+            text-align: center;
+        }
+
+        .community-section h2, .tiktok-content-section h2 {
+            color: var(--primary-cyan);
+            margin-bottom: 1rem;
+            font-size: 1.5rem;
+        }
+
+        .community-section p, .tiktok-content-section p {
+            margin-bottom: 1.5rem;
+            opacity: 0.9;
+        }
+
+        .social-links {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .tiktok-content-section a.text-link {
+            color: var(--primary-pink);
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .tiktok-content-section a.text-link:hover {
+            text-decoration: underline;
+        }
+
+        /* --- Mobile Responsiveness --- */
+        @media (max-width: 768px) {
+            header {
+                flex-direction: column;
+                gap: 1.5rem;
+            }
+            .header-controls {
+                width: 100%;
+                justify-content: center;
+                flex-wrap: wrap;
+            }
+            .countdown {
+                gap: 0.8rem;
+            }
+            .time-box {
+                min-width: 70px;
+                padding: 0.8rem;
+            }
+            .time-box span {
+                font-size: 1.8rem;
+            }
+            .grid-section {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body class="dark-mode">
+    <header>
+        <img src="TooginLogo.png" alt="TooginTV Logo" class="logo-img">
+        <div class="header-controls">
+            <a href="karaoke.html" class="btn">Karaoke Event</a>
+            <button class="btn btn-outline" id="themeToggle">Toggle Theme</button>
+        </div>
+    </header>
+
+    <main>
+        <section class="card about-section">
+            <h2>What is TooginTV?</h2>
+            <p><strong>TooginTV is a music related variety show that has been live on twitch every Thursday for 4 years. Now on tiktok too!</strong></p>
+            <p>Musicians spontaneously gather on Thursdays for some Toogin style jamming. We even take some requests. Toogin is an ancient streaming art, Where talented musicians play whatever songs they feel like live to the internet, even if they don't all know how to play the song when they start it.</p>
+        </section>
+
+        <section class="card schedule-section">
+            <h2>Next Live Stream</h2>
+            <div class="schedule-text">
+                Watch our next variety show on Thursday night @<br>
+                <span id="localTimeDisplay" class="local-time">...</span>
+            </div>
+            
+            <div class="countdown" id="countdown">
+                <div class="time-box"><span id="days">00</span><small>Days</small></div>
+                <div class="time-box"><span id="hours">00</span><small>Hours</small></div>
+                <div class="time-box"><span id="mins">00</span><small>Mins</small></div>
+                <div class="time-box"><span id="secs">00</span><small>Secs</small></div>
+            </div>
+        </section>
+
+        <section class="card video-wrapper">
+            <div class="video-container" id="twitch-embed"></div>
+        </section>
+
+        <div class="grid-section">
+            <section class="card community-section">
+                <h2>Join the Community</h2>
+                <p>Join our growing family of <strong>376 followers</strong> on Twitch! Don't forget to follow us on TikTok for short dramas, event updates, and recent clips.</p>
+                <div class="social-links">
+                    <a href="https://www.tiktok.com/@toogintvofficial" target="_blank" class="btn btn-social">@toogintvofficial</a>
+                    <a href="https://www.twitch.tv/TooginTV" target="_blank" class="btn btn-social">Twitch</a>
+                </div>
+            </section>
+
+            <section class="card tiktok-content-section">
+                <h2>TikTok Shorts & Dramas</h2>
+                <p>Looking for fun bite-sized content between our live Thursday jams?</p>
+                <p>Check out our latest <a href="https://www.tiktok.com/@toogintvofficial" target="_blank" class="text-link">short dramas and TikTok videos</a> to see behind-the-scenes moments and viral highlights!</p>
             </section>
         </div>
     </main>
