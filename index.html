@@ -11,16 +11,16 @@
             --bg-color: var(--primary-cyan);
             --text-color: #ffffff;
             --container-bg: rgba(0, 0, 0, 0.1);
-            --form-bg: #ffffff;
-            --form-text: #000000;
+            --card-bg: #ffffff;
+            --card-text: #000000;
         }
 
         body.dark-mode {
             --bg-color: #000000; 
             --text-color: #ffffff;
             --container-bg: rgba(255, 255, 255, 0.1);
-            --form-bg: #222222;
-            --form-text: #ffffff;
+            --card-bg: #222222;
+            --card-text: #ffffff;
         }
 
         * {
@@ -125,6 +125,67 @@
             margin-bottom: 0;
         }
 
+        .schedule-section {
+            background-color: var(--card-bg);
+            color: var(--card-text);
+            padding: 2rem;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1.5rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .schedule-section h2 {
+            color: var(--primary-pink);
+            font-size: 1.8rem;
+            text-transform: uppercase;
+        }
+
+        .schedule-section p {
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+
+        .local-time {
+            color: var(--primary-cyan);
+            background: #222;
+            padding: 0.2rem 0.6rem;
+            border-radius: 4px;
+            font-size: 1.3rem;
+        }
+
+        .countdown {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+        }
+
+        .time-box {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: var(--container-bg);
+            padding: 1rem;
+            border-radius: 8px;
+            min-width: 80px;
+            border: 2px solid var(--primary-pink);
+        }
+
+        .time-box span {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--primary-pink);
+        }
+
+        .time-box small {
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            margin-top: 0.5rem;
+        }
+
         .video-container {
             width: 100%;
             aspect-ratio: 16 / 9;
@@ -146,52 +207,6 @@
             letter-spacing: 2px;
         }
 
-        .request-form {
-            background-color: var(--form-bg);
-            color: var(--form-text);
-            padding: 2rem;
-            border-radius: 8px;
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        }
-
-        .request-form h2 {
-            color: var(--primary-pink);
-            text-align: center;
-            margin-bottom: 1rem;
-            font-size: 1.8rem;
-        }
-
-        .form-group {
-            display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
-        }
-
-        .form-group label {
-            font-weight: bold;
-        }
-
-        input {
-            padding: 0.75rem;
-            border: 2px solid #ccc;
-            border-radius: 4px;
-            font-size: 1rem;
-            background-color: var(--form-bg);
-            color: var(--form-text);
-        }
-
-        input:focus {
-            outline: none;
-            border-color: var(--primary-pink);
-        }
-
-        button[type="submit"] {
-            margin-top: 1rem;
-        }
-        
         @media (max-width: 600px) {
             header {
                 flex-direction: column;
@@ -204,12 +219,15 @@
             .header-controls .btn {
                 width: 100%;
             }
+            .countdown {
+                flex-wrap: wrap;
+            }
         }
     </style>
 </head>
 <body>
     <header>
-        <img src="pink and blue.png" alt="TooginTV Logo" class="logo-img">
+        <img src="TooginLogo.png" alt="TooginTV Logo" class="logo-img">
         <div class="header-controls">
             <a href="karaoke.html" class="btn">Karaoke Event</a>
             <button class="btn btn-outline" id="themeToggle">Dark Mode</button>
@@ -222,31 +240,97 @@
             <p>Toogin is an ancient streaming art, Where talented musicians play whatever songs they feel like live to the internet, even if they don't all know how to play the song when they start it.</p>
         </section>
 
-        <section class="video-container">
-            <div class="video-placeholder">LIVE STREAM OFFLINE</div>
+        <section class="schedule-section">
+            <h2>Next Live Stream</h2>
+            <p>Watch our next variety show on Thursday night @ <span id="localTimeDisplay" class="local-time">...</span></p>
+            
+            <div class="countdown" id="countdown">
+                <div class="time-box"><span id="days">00</span><small>Days</small></div>
+                <div class="time-box"><span id="hours">00</span><small>Hours</small></div>
+                <div class="time-box"><span id="mins">00</span><small>Mins</small></div>
+                <div class="time-box"><span id="secs">00</span><small>Secs</small></div>
+            </div>
         </section>
 
-        <section class="request-form">
-            <h2>Request a Song for Tonight</h2>
-            <div class="form-group">
-                <label for="name">Your Name:</label>
-                <input type="text" id="name" placeholder="Enter your name">
-            </div>
-            <div class="form-group">
-                <label for="song">Song Request:</label>
-                <input type="text" id="song" placeholder="Song title & Artist">
-            </div>
-            <button type="submit" class="btn">Submit Request</button>
+        <section class="video-container">
+            <div class="video-placeholder">LIVE STREAM OFFLINE</div>
         </section>
     </main>
 
     <script>
+        // --- Theme Toggle ---
         const toggleBtn = document.getElementById('themeToggle');
         const body = document.body;
-
         toggleBtn.addEventListener('click', () => {
             body.classList.toggle('dark-mode');
         });
+
+        // --- Timezone & Countdown Logic ---
+        function getNextBroadcastTime() {
+            const now = new Date();
+            // Start searching from the current hour
+            let startSearch = new Date(now.getFullYear(), now.getMonth(), now.getDate(), now.getHours());
+            
+            // Look ahead hour-by-hour (up to 14 days) to find 8 PM Thursday in Edmonton
+            for (let i = 0; i < 14 * 24; i++) {
+                let tempDate = new Date(startSearch.getTime() + i * 3600000);
+                
+                let parts = new Intl.DateTimeFormat('en-US', {
+                    timeZone: 'America/Edmonton',
+                    weekday: 'short',
+                    hour: 'numeric',
+                    hour12: true
+                }).formatToParts(tempDate);
+                
+                let weekday = parts.find(p => p.type === 'weekday').value;
+                let hour = parts.find(p => p.type === 'hour').value;
+                let ampm = parts.find(p => p.type === 'dayPeriod' || p.type === 'ampm');
+                let ampmVal = ampm ? ampm.value.toUpperCase() : '';
+
+                let is8PM = (hour === '8' && ampmVal.includes('PM')) || hour === '20';
+
+                if (weekday === 'Thu' && is8PM) {
+                    if (tempDate > now) {
+                        return tempDate;
+                    }
+                }
+            }
+            return now; 
+        }
+
+        const broadcastDate = getNextBroadcastTime();
+        
+        // Display the broadcast time in the user's local timezone
+        const localTimeStr = broadcastDate.toLocaleTimeString([], { 
+            hour: 'numeric', 
+            minute: '2-digit', 
+            timeZoneName: 'short' 
+        });
+        document.getElementById('localTimeDisplay').textContent = localTimeStr;
+
+        // Run the countdown
+        function updateCountdown() {
+            const now = new Date().getTime();
+            const distance = broadcastDate.getTime() - now;
+
+            if (distance < 0) {
+                document.getElementById("countdown").innerHTML = "<h3 style='color: var(--primary-pink);'>WE ARE LIVE!</h3>";
+                return;
+            }
+
+            const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+            document.getElementById("days").innerText = String(days).padStart(2, '0');
+            document.getElementById("hours").innerText = String(hours).padStart(2, '0');
+            document.getElementById("mins").innerText = String(minutes).padStart(2, '0');
+            document.getElementById("secs").innerText = String(seconds).padStart(2, '0');
+        }
+
+        setInterval(updateCountdown, 1000);
+        updateCountdown();
     </script>
 </body>
 </html>
