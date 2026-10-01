@@ -135,8 +135,10 @@
             gap: 2.5rem;
         }
 
+        /* Cards with TV Static / Noise Texture */
         .card {
             background-color: var(--card-bg);
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.08'/%3E%3C/svg%3E");
             padding: 3rem 2.5rem;
             border-radius: 16px;
             box-shadow: var(--card-shadow);
@@ -166,7 +168,7 @@
         }
         
         body:not(.dark-mode) .hero-section strong {
-            color: #d15d92; /* Darker pink for better contrast on light mode */
+            color: #d15d92; 
         }
 
         .request-card {
@@ -179,12 +181,22 @@
         .request-card h2 {
             font-size: 2rem;
             margin-bottom: 0.5rem;
+            color: var(--primary-cyan);
         }
 
         .request-card p {
             font-size: 1.1rem;
             opacity: 0.8;
-            max-width: 600px;
+            max-width: 650px;
+        }
+
+        .highlight-box {
+            background-color: rgba(235, 116, 171, 0.1);
+            border: 2px dashed var(--primary-pink);
+            padding: 1rem;
+            border-radius: 8px;
+            margin: 1rem 0;
+            font-weight: 500;
         }
 
         @media (max-width: 768px) {
@@ -203,7 +215,7 @@
         }
     </style>
 </head>
-<body class="dark-mode"> <!-- Defaulting to dark mode to match index.html -->
+<body class="dark-mode"> 
     <header>
         <img src="TooginLogo.png" alt="TooginTV Logo" class="logo-img">
         <div class="header-controls">
@@ -215,17 +227,21 @@
     <main>
         <section class="card hero-section">
             <h1>Karaoke Band Event</h1>
-            <p>Get ready to take the stage! We are hosting a special live karaoke band event on <strong>December 13th At Rendezvous Pub on 149St and Stonyplain RoadIn edmonton Alberta</strong>.</p>
-            <p>Sing your heart out with a real, live band backing you up directly on the TooginTV stream!</p> Tickets av
+            <p>Get ready to take the stage! We are hosting a special live karaoke band event on <strong>December 13th</strong>.</p>
+            <p>Sing your heart out with a real, live band backing you up directly on the TooginTV stream!</p>
         </section>
 
         <section class="card request-card">
             <h2>What do you want to sing?</h2>
-            <p>🎤 Live Band Karaoke Event
-Get ready to take the stage with a real, live band backing you up on December 13th! Because we're planning ahead, the floodgates are wide open—we are currently accepting any song request you can dream up. Don't wait, though: as we get closer to the big night, limits will kick in and song choices will be strictly capped. Get your favorite tracks reserved now while anything goes!.</p>
+            <p>Because we're planning ahead, the floodgates are currently wide open. As we get closer to the big night, limits will kick in and song choices will be strictly capped. Get your favorite tracks reserved now while anything goes!</p>
+            
+            <div class="highlight-box">
+                When filling out the form below, please be sure to enter your requested songs in the exact format: <br>
+                <strong>"Song title" - "Artist"</strong>
+            </div>
             
             <!-- REPLACE THE LINK BELOW WITH YOUR GOOGLE FORM LINK -->
-            <a href="https://forms.gle/v3omnCGXa6cY7UEo9" target="_blank" class="btn btn-large">Open Song Request Form</a>
+            <a href="https://forms.gle/bus9go5eY5yxmSQY9" target="_blank" class="btn btn-large">Open Song Request Form</a>
         </section>
     </main>
 
