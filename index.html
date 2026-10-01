@@ -123,7 +123,18 @@
             color: #ffffff;
         }
 
-        /* --- Layout & Cards --- */
+        .btn-social {
+            background-color: var(--card-bg);
+            border: 2px solid var(--primary-cyan);
+            color: var(--text-color);
+        }
+
+        .btn-social:hover {
+            background-color: var(--primary-cyan);
+            color: #000000;
+        }
+
+        /* --- Layout & Cards with Static/Noise Texture --- */
         main {
             width: 100%;
             max-width: 900px;
@@ -134,6 +145,8 @@
 
         .card {
             background-color: var(--card-bg);
+            /* TV Static / Grunge Noise Texture Overlay mimicking the logo */
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.08'/%3E%3C/svg%3E");
             padding: 2.5rem;
             border-radius: 16px;
             box-shadow: var(--card-shadow);
@@ -144,6 +157,12 @@
         .about-section {
             text-align: center;
             font-size: 1.1rem;
+        }
+
+        .about-section h2 {
+            color: var(--primary-pink);
+            margin-bottom: 1rem;
+            font-size: 1.8rem;
         }
 
         .about-section p {
@@ -249,6 +268,45 @@
             border: none;
         }
 
+        /* --- Community & TikTok Content Section --- */
+        .grid-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2.5rem;
+        }
+
+        .community-section, .tiktok-content-section {
+            text-align: center;
+        }
+
+        .community-section h2, .tiktok-content-section h2 {
+            color: var(--primary-cyan);
+            margin-bottom: 1rem;
+            font-size: 1.5rem;
+        }
+
+        .community-section p, .tiktok-content-section p {
+            margin-bottom: 1.5rem;
+            opacity: 0.9;
+        }
+
+        .social-links {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .tiktok-content-section a.text-link {
+            color: var(--primary-pink);
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .tiktok-content-section a.text-link:hover {
+            text-decoration: underline;
+        }
+
         /* --- Mobile Responsiveness --- */
         @media (max-width: 768px) {
             header {
@@ -270,6 +328,9 @@
             .time-box span {
                 font-size: 1.8rem;
             }
+            .grid-section {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
@@ -284,8 +345,9 @@
 
     <main>
         <section class="card about-section">
-		<h2>📺 What is TooginTV?</h2>
-            <p>TooginTV is a music-related variety show that has been broadcasting live on Twitch every Thursday night for 4 years. Driven by the ancient streaming art of "Toogin-style" jamming, it's a weekly session where talented musicians spontaneously gather to play whatever songs they feel like live to the internet—taking requests and tackling tracks on the spot, even if they don't all know how to play the song when they start it!</p>
+            <h2>What is TooginTV?</h2>
+            <p><strong>TooginTV is a music related variety show that has been live on twitch every Thursday for 4 years. Now on tiktok too!</strong></p>
+            <p>Musicians spontaneously gather on Thursdays for some Toogin style jamming. We even take some requests. Toogin is an ancient streaming art, Where talented musicians play whatever songs they feel like live to the internet, even if they don't all know how to play the song when they start it.</p>
         </section>
 
         <section class="card schedule-section">
@@ -306,10 +368,30 @@
         <section class="card video-wrapper">
             <div class="video-container" id="twitch-embed"></div>
         </section>
+
+        <div class="grid-section">
+            <section class="card community-section">
+                <h2>Join the Community</h2>
+                <p>Join our growing family of <strong>376 followers</strong> on Twitch! Don't forget to follow us on TikTok for short dramas, event updates, and recent clips.</p>
+                <div class="social-links">
+                    <a href="https://www.tiktok.com/@toogintvofficial" target="_blank" class="btn btn-social">@toogintvofficial</a>
+                    <a href="https://www.twitch.tv/TooginTV" target="_blank" class="btn btn-social">Twitch</a>
+                </div>
+            </section>
+
+            <section class="card tiktok-content-section">
+                <h2>TikTok Shorts & Dramas</h2>
+                <p>Looking for fun bite-sized content between our live Thursday jams?</p>
+                <p>Check out our latest <a href="https://www.tiktok.com/@toogintvofficial" target="_blank" class="text-link">short dramas and TikTok videos</a> to see behind-the-scenes moments and viral highlights[cite: 1]!</p>
+            </section>
+        </div>
     </main>
 
     <!-- Load the official Twitch Embed JavaScript API -->
     <script src="https://player.twitch.tv/js/embed/v1.js"></script>
+    
+    <!-- Load Configuration Keys and Variables -->
+    <script src="config.js"></script>
 
     <script>
         // --- Theme Toggle ---
@@ -320,19 +402,11 @@
         });
 
         // --- Twitch Auto-VOD Logic (Thursday Filter) ---
-        // INSERT YOUR TWITCH API KEYS HERE
-        const TWITCH_CLIENT_ID = 'gp762nuuoqcoxypju8c569th9wz7q5';
-        const TWITCH_ACCESS_TOKEN = 'fjft4g44hptrqde0ijl7tk8flqj29u'; 
-        
-        // Fallback VOD if API keys are missing or no Thursday VOD exists
-        const FALLBACK_VOD_ID = '2883281258'; 
-
         const twitchOptions = {
             width: '100%',
             height: '100%',
             channel: 'toogintv',
-            // IMPORTANT: Change 'yourwebsite.com' to your actual domain name. 
-            parent: ['www.toogintv.com'],
+            parent: TOOGIN_CONFIG.TWITCH_PARENT_DOMAINS,
             autoplay: true,
             muted: false
         };
@@ -344,11 +418,10 @@
                 console.log("Channel is offline. Searching for the latest Thursday VOD...");
                 
                 try {
-                    // 1. Get the Twitch User ID for TooginTV
                     const userRes = await fetch('https://api.twitch.tv/helix/users?login=toogintv', {
                         headers: {
-                            'Client-ID': TWITCH_CLIENT_ID,
-                            'Authorization': `Bearer ${TWITCH_ACCESS_TOKEN}`
+                            'Client-ID': TOOGIN_CONFIG.TWITCH_CLIENT_ID,
+                            'Authorization': `Bearer ${TOOGIN_CONFIG.TWITCH_ACCESS_TOKEN}`
                         }
                     });
                     const userData = await userRes.json();
@@ -358,16 +431,14 @@
                     }
                     const userId = userData.data[0].id;
 
-                    // 2. Fetch the 20 most recent archived VODs
                     const videoRes = await fetch(`https://api.twitch.tv/helix/videos?user_id=${userId}&type=archive&first=20`, {
                         headers: {
-                            'Client-ID': TWITCH_CLIENT_ID,
-                            'Authorization': `Bearer ${TWITCH_ACCESS_TOKEN}`
+                            'Client-ID': TOOGIN_CONFIG.TWITCH_CLIENT_ID,
+                            'Authorization': `Bearer ${TOOGIN_CONFIG.TWITCH_ACCESS_TOKEN}`
                         }
                     });
                     const videoData = await videoRes.json();
 
-                    // 3. Find the first VOD recorded on a Thursday (converted to Edmonton time)
                     let thursdayVodId = null;
                     for (const video of videoData.data) {
                         const date = new Date(video.created_at);
@@ -376,7 +447,7 @@
                         
                         if (weekday === 'Thu') {
                             thursdayVodId = video.id;
-                            break; // Stop at the most recent Thursday
+                            break; 
                         }
                     }
 
@@ -389,7 +460,7 @@
 
                 } catch (error) {
                     console.error("API failed (check your keys) or no Thursday VOD found. Loading fallback.", error);
-                    player.setVideo(FALLBACK_VOD_ID);
+                    player.setVideo(TOOGIN_CONFIG.FALLBACK_VOD_ID);
                 }
             });
         });
