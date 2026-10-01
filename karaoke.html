@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TooginTV - Karaoke Event</title>
+    <style>
+        :root {
+            --primary-cyan: #4ce0e4; 
+            --primary-pink: #eb74ab; 
+            --bg-color: var(--primary-cyan);
+            --text-color: #ffffff;
+            --container-bg: rgba(0, 0, 0, 0.1);
+            --form-bg: #ffffff;
+            --form-text: #000000;
+        }
+
+        body.dark-mode {
+            --bg-color: #000000; 
+            --text-color: #ffffff;
+            --container-bg: rgba(255, 255, 255, 0.1);
+            --form-bg: #222222;
+            --form-text: #ffffff;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Courier New', Courier, monospace;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            transition: background-color 0.3s, color 0.3s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            padding: 2rem;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            max-width: 800px;
+            margin-bottom: 2rem;
+        }
+
+        .header-controls {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .logo-img {
+            max-width: 280px;
+            height: auto;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            transition: transform 0.2s;
+        }
+
+        .logo-img:hover {
+            transform: scale(1.02);
+        }
+
+        .btn {
+            background-color: var(--primary-pink);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            border-radius: 5px;
+            text-transform: uppercase;
+            text-decoration: none;
+            text-align: center;
+            transition: transform 0.2s, background-color 0.2s;
+            display: inline-block;
+        }
+
+        .btn:hover {
+            transform: scale(1.05);
+            background-color: #d65a92;
+        }
+
+        .btn-outline {
+            background-color: transparent;
+            border: 2px solid var(--primary-pink);
+            color: var(--text-color);
+        }
+
+        .btn-outline:hover {
+            background-color: var(--primary-pink);
+            color: white;
+        }
+
+        .btn-large {
+            padding: 1rem 2rem;
+            font-size: 1.2rem;
+            width: 100%;
+            margin-top: 1rem;
+        }
+
+        main {
+            width: 100%;
+            max-width: 800px;
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        .about-section {
+            background-color: var(--container-bg);
+            padding: 2.5rem;
+            border-radius: 8px;
+            font-size: 1.2rem;
+            line-height: 1.6;
+            text-align: center;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .about-section h1 {
+            color: var(--primary-pink);
+            margin-bottom: 1rem;
+            font-size: 2.5rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .about-section p {
+            margin-bottom: 1rem;
+        }
+
+        .request-card {
+            background-color: var(--form-bg);
+            color: var(--form-text);
+            padding: 2rem;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .request-card h2 {
+            color: var(--primary-pink);
+            font-size: 1.8rem;
+        }
+        
+        @media (max-width: 600px) {
+            header {
+                flex-direction: column;
+                gap: 1.5rem;
+            }
+            .header-controls {
+                flex-direction: column;
+                width: 100%;
+            }
+            .header-controls .btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <img src="pink and blue.png" alt="TooginTV Logo" class="logo-img">
+        <div class="header-controls">
+            <a href="index.html" class="btn">Back to Home</a>
+            <button class="btn btn-outline" id="themeToggle">Dark Mode</button>
+        </div>
+    </header>
+
+    <main>
+        <section class="about-section">
+            <h1>Karaoke Band Event</h1>
+            <p>Get ready to take the stage! We are hosting a special live karaoke band event on <strong>December 13th</strong>.</p>
+            <p>Sing your heart out with a real, live band backing you up on the TooginTV stream!</p>
+        </section>
+
+        <section class="request-card">
+            <h2>What do you want to sing?</h2>
+            <p>Let us know what songs you want to perform so the band can get ready. Fill out our official Google Survey form below to submit your song requests!</p>
+            
+            <!-- REPLACE THE LINK BELOW WITH YOUR GOOGLE FORM LINK -->
+            <a href="YOUR_GOOGLE_FORM_LINK_HERE" target="_blank" class="btn btn-large">Open Song Request Form</a>
+        </section>
+    </main>
+
+    <script>
+        const toggleBtn = document.getElementById('themeToggle');
+        const body = document.body;
+
+        toggleBtn.addEventListener('click', () => {
+            body.classList.toggle('dark-mode');
+        });
+    </script>
+</body>
+</html>
