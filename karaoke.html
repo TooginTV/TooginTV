@@ -3,160 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TooginTV - Live Karaoke Event</title>
-    
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Montserrat:wght@700;800&display=swap" rel="stylesheet">
-    
-    <style>
-        :root {
-            --primary-cyan: #4ce0e4; 
-            --primary-pink: #eb74ab; 
-            --pink-hover: #d15d92;
-            
-            --bg-color: var(--primary-cyan);
-            --text-color: #222222;
-            --card-bg: #ffffff;
-            --card-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
-            --border-color: rgba(0, 0, 0, 0.1);
-        }
-
-        body.dark-mode {
-            --bg-color: #0d0d0d; 
-            --text-color: #f5f5f5;
-            --card-bg: #1a1a1a;
-            --card-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
-            --border-color: rgba(255, 255, 255, 0.1);
-        }
-
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-
-        body {
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            font-family: 'Inter', sans-serif;
-            transition: background-color 0.4s ease, color 0.4s ease;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            min-height: 100vh;
-            padding: 0 1.5rem 3rem 1.5rem;
-            line-height: 1.6;
-        }
-
-        h1, h2, h3, .brand-font { font-family: 'Montserrat', sans-serif; }
-
-        header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            width: 100%;
-            max-width: 900px;
-            padding: 2rem 0;
-            margin-bottom: 2rem;
-        }
-
-        .logo-img {
-            max-width: 220px;
-            height: auto;
-            border-radius: 8px;
-            box-shadow: var(--card-shadow);
-            transition: transform 0.3s ease;
-        }
-
-        .logo-img:hover { transform: translateY(-2px); }
-
-        .header-controls { display: flex; gap: 1rem; align-items: center; }
-
-        .btn {
-            background-color: var(--primary-pink);
-            color: #ffffff;
-            border: none;
-            padding: 0.8rem 1.5rem;
-            font-family: 'Montserrat', sans-serif;
-            font-size: 0.9rem;
-            font-weight: 700;
-            cursor: pointer;
-            border-radius: 50px;
-            text-transform: uppercase;
-            text-decoration: none;
-            text-align: center;
-            letter-spacing: 0.5px;
-            transition: all 0.2s ease;
-            box-shadow: 0 4px 10px rgba(235, 116, 171, 0.3);
-            display: inline-block;
-        }
-
-        .btn:hover { background-color: var(--pink-hover); transform: translateY(-2px); }
-
-        .btn-outline {
-            background-color: var(--card-bg);
-            border: 2px solid var(--primary-pink);
-            color: var(--text-color);
-            box-shadow: var(--card-shadow);
-        }
-
-        .btn-outline:hover { background-color: var(--primary-pink); color: #ffffff; }
-
-        .btn-large { padding: 1.2rem 2.5rem; font-size: 1.1rem; width: 100%; max-width: 400px; margin-top: 1.5rem; }
-
-        main { width: 100%; max-width: 900px; display: flex; flex-direction: column; gap: 2.5rem; }
-
-        /* Upgraded TV Static - Matches the heavier static of the index page */
-        .card {
-            background-color: var(--card-bg);
-            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.35' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 12 -4' /%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.35'/%3E%3C/svg%3E");
-            padding: 3rem 2.5rem;
-            border-radius: 16px;
-            box-shadow: var(--card-shadow);
-            border: 2px solid var(--border-color);
-            transition: background-color 0.4s ease, border 0.4s ease;
-            text-align: center;
-        }
-
-        .hero-section h1 {
-            color: var(--primary-pink);
-            margin-bottom: 1rem;
-            font-size: 2.8rem;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            line-height: 1.2;
-        }
-
-        .hero-section p { font-size: 1.2rem; margin-bottom: 1.5rem; opacity: 0.9; }
-        .hero-section strong { color: var(--primary-cyan); font-size: 1.3rem; }
-        body:not(.dark-mode) .hero-section strong { color: #d15d92; }
-
-        .request-card { display: flex; flex-direction: column; align-items: center; gap: 1rem; }
-        .request-card h2 { font-size: 2rem; margin-bottom: 0.5rem; color: var(--primary-cyan); }
-        .request-card p { font-size: 1.1rem; opacity: 0.8; max-width: 650px; line-height: 1.6;}
-
-        .highlight-box {
-            background-color: rgba(235, 116, 171, 0.1);
-            border: 2px dashed var(--primary-pink);
-            padding: 1rem;
-            border-radius: 8px;
-            margin: 1rem 0;
-            font-weight: 500;
-        }
-
-        @media (max-width: 768px) {
-            header { flex-direction: column; gap: 1.5rem; }
-            .header-controls { width: 100%; justify-content: center; flex-wrap: wrap; }
-            .hero-section h1 { font-size: 2.2rem; }
-        }
-    </style>
+    <title>Karaoke Portal | TooginTV</title>
+    <link rel="stylesheet" href="css/styles.css">
 </head>
-<body class="dark-mode"> 
+<body>
+    <div class="tv-static-overlay"></div>
+    
     <header>
-        <img src="TooginLogo.png" alt="TooginTV Logo" class="logo-img">
-        <div class="header-controls">
-            <a href="index.html" class="btn">Back to Home</a>
-            <button class="btn btn-outline" id="themeToggle">Toggle Theme</button>
+        <div class="logo-container">
+            <h1>TooginTV</h1>
         </div>
+        <nav>
+            <a href="index.html">Home</a>
+            <a href="karaoke.html" class="active">Karaoke Portal</a>
+            <a href="schedule.html">Schedule</a>
+            <a href="guests.html">Guest Archive</a>
+            <a href="community.html">Community</a>
+        </nav>
     </header>
-
     <main>
         <section class="card hero-section">
             <h1>Live Band Karaoke Event</h1>
@@ -179,8 +43,8 @@
     </main>
 
     <!-- Load Config -->
-    <script src="config.js"></script>
-
+    <script src="js/config.js"></script>
+    <script src="js/main.js"></script>
     <script>
         document.getElementById('themeToggle').addEventListener('click', () => {
             document.body.classList.toggle('dark-mode');
