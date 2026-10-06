@@ -124,10 +124,38 @@ function initKaraokeForm() {
         });
     }
 }
+// --- Theme Toggle Logic ---
+function initTheme() {
+    const themeBtn = document.getElementById('theme-toggle');
+    const themeIcon = document.getElementById('theme-icon');
+    const body = document.body;
 
-// Initialize scripts
+    if (!themeBtn) return;
+
+    // Check the browser's local storage for a saved preference
+    const savedTheme = localStorage.getItem('toogintv-theme');
+    
+    // Apply light mode on load if that was their last choice
+    if (savedTheme === 'light') {
+        body.classList.add('light-mode');
+        themeIcon.textContent = '🌙'; // Show moon to switch back to dark
+    }
+
+    // Toggle event listener
+    themeBtn.addEventListener('click', () => {
+        body.classList.toggle('light-mode');
+        const isLight = body.classList.contains('light-mode');
+        
+        // Swap icon and save the preference
+        themeIcon.textContent = isLight ? '🌙' : '☀️';
+        localStorage.setItem('toogintv-theme', isLight ? 'light' : 'dark');
+    });
+}
+
+// --- Initialize All Scripts ---
 document.addEventListener('DOMContentLoaded', () => {
     initCountdown();
     loadTwitchPlayer();
     initKaraokeForm();
+    initTheme(); // <-- Make sure to add this line here
 });
