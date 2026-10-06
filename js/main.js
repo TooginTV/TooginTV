@@ -8,21 +8,34 @@ function switchTab(tabId) {
 }
 
 // --- Countdown Timer Logic ---
-function initCountdown() {
+// --- Countdown Timer Logic ---
+async function initCountdown() {
     const timerElement = document.getElementById('countdown-timer');
     if (!timerElement) return;
 
-    // Default fallback to Next Thursday at 8 PM local time
-    function getNextThursday() {
+    let targetDate;
+
+    try {
+        // Fetch the real event time from your secure backend
+        const response = await fetch('/api/get-next-broadcast');
+        const data = await response.json();
+
+        if (data.startTime) {
+            targetDate = new Date(data.startTime).getTime();
+        } else {
+            throw new Error("No start time returned from API");
+        }
+    } catch (error) {
+        console.error("Falling back to default Thursday calculation:", error);
+        // Default fallback to Next Thursday at 8 PM local time if the API fails
         const now = new Date();
         const nextThursday = new Date();
         nextThursday.setDate(now.getDate() + ((4 - 1 - now.getDay() + 7) % 7 + 1));
         nextThursday.setHours(20, 0, 0, 0); 
-        return nextThursday;
+        targetDate = nextThursday.getTime();
     }
 
-    const targetDate = getNextThursday().getTime();
-
+    // Start the countdown loop
     setInterval(() => {
         const now = new Date().getTime();
         const distance = targetDate - now;
