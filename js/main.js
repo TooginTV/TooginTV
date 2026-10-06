@@ -42,17 +42,36 @@ function initCountdown() {
 }
 
 // --- Twitch Embed Logic ---
-function loadTwitchPlayer() {
+async function loadTwitchPlayer() {
     const container = document.getElementById('twitch-player-container');
     if (!container) return;
 
-    // Embeds the live channel feed automatically
-    container.innerHTML = `<iframe 
-        src="https://player.twitch.tv/?channel=${CONFIG.TWITCH_USERNAME}&parent=www.toogintv.com&parent=toogintv.com" 
-        height="400" 
-        width="100%" 
-        allowfullscreen>
-    </iframe>`;
+    try {
+        // Ping your Vercel serverless function
+        const response = await fetch('/api/get-twitch-vod');
+        const data = await response.json();
+
+        if (data.videoId) {
+            // Embed the specific Thursday VOD
+            container.innerHTML = `<iframe 
+                src="https://player.twitch.tv/?video=${data.videoId}&parent=www.toogintv.com&parent=toogintv.com" 
+                height="400" 
+                width="100%" 
+                allowfullscreen>
+            </iframe>`;
+        } else {
+            // Fallback to live channel if no VOD is found
+            container.innerHTML = `<iframe 
+                src="https://player.twitch.tv/?channel=TooginTV&parent=www.toogintv.com&parent=toogintv.com" 
+                height="400" 
+                width="100%" 
+                allowfullscreen>
+            </iframe>`;
+        }
+    } catch (error) {
+        console.error("Error loading VOD from API:", error);
+    }
+}
 }
 
 // --- Karaoke Form Submission Logic ---
