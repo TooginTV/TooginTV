@@ -1,7 +1,11 @@
+/* =========================================
+   BASELINE (DEFAULT) LIGHT MODE AESTHETIC
+   ========================================= */
 :root {
-    --bg-color: #0f0f11;
-    --text-color: #e0e0e0;
-    --accent-color: #ff3333; 
+    --bg-color: #00f0ff; /* Bright Toogin Cyan */
+    --text-color: #0a0a0c; /* Deep black text */
+    --accent-pink: #ff2a85; /* Toogin Pink */
+    --accent-blue: #005bb5; /* Darker blue for borders/labels in light mode */
     --font-main: 'Courier New', Courier, monospace; 
 }
 
@@ -14,7 +18,7 @@ body {
     position: relative;
 }
 
-/* TV Static Texture Overlay */
+/* TV Static Texture Overlay - Default Light Mode */
 .tv-static-overlay {
     position: fixed;
     top: 0;
@@ -23,6 +27,7 @@ body {
     height: 100vh;
     background-image: url('https://www.transparenttextures.com/patterns/stardust.png'); 
     opacity: 0.15;
+    filter: invert(1); /* Black dust for bright cyan background */
     pointer-events: none;
     z-index: 9999;
 }
@@ -30,16 +35,40 @@ body {
 header {
     text-align: center;
     padding: 2rem;
-    border-bottom: 2px solid #333;
+    background: #ffffff;
+    border-bottom: 3px solid #0a0a0c;
 }
 
-header h1 {
-    font-size: 3rem;
-    color: var(--accent-color);
-    text-transform: uppercase;
-    letter-spacing: 5px;
-    text-shadow: 2px 2px 0px #000;
+.logo-container img {
+    max-width: 350px;
+    height: auto;
+    display: block;
+    margin: 0 auto 15px auto;
 }
+
+.sr-only {
+    position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); border: 0;
+}
+
+/* Theme Toggle Button Positioning */
+.theme-toggle {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    color: var(--text-color);
+    transition: transform 0.2s;
+    z-index: 100;
+}
+
+.theme-toggle:hover {
+    transform: scale(1.1);
+}
+
+nav { margin-top: 10px; }
 
 nav a {
     color: var(--text-color);
@@ -47,11 +76,12 @@ nav a {
     margin: 0 15px;
     font-size: 1.2rem;
     padding-bottom: 5px;
+    transition: color 0.2s, border-bottom 0.2s;
 }
 
 nav a:hover, nav a.active {
-    color: var(--accent-color);
-    border-bottom: 2px solid var(--accent-color);
+    color: var(--accent-pink);
+    border-bottom: 2px solid var(--accent-pink);
 }
 
 main {
@@ -60,64 +90,37 @@ main {
     padding: 2rem;
 }
 
-/* Tabs */
-.tab-buttons {
-    display: flex;
-    justify-content: center;
-    margin-bottom: 20px;
+h2, h3 {
+    color: var(--accent-pink); /* Pink headings pop on white cards */
 }
 
-.tab-btn {
-    background: transparent;
-    color: var(--text-color);
-    border: 1px solid #333;
-    padding: 10px 20px;
-    cursor: pointer;
-    font-family: var(--font-main);
-    font-size: 1.1rem;
-}
-
-.tab-btn.active {
-    background: var(--accent-color);
-    color: #fff;
-    border-color: var(--accent-color);
-}
-
-.tab-content {
-    display: none;
-}
-
-.tab-content.active {
-    display: block;
-}
-
-/* Karaoke Form */
-.karaoke-form-section {
-    background: #1a1a1d;
+/* Default Light Hero Cards / Content Boxes */
+.content-box, .karaoke-form-section, .artist-card {
+    background: #ffffff;
     padding: 2rem;
-    border: 1px solid #333;
+    border: 2px solid #0a0a0c;
+    box-shadow: 6px 6px 0px rgba(255, 42, 133, 0.8); /* Retro pink drop-shadow */
+    margin-bottom: 2rem;
 }
 
-.form-group {
-    margin-bottom: 1.5rem;
-}
+.artist-card { display: flex; align-items: center; }
+.artist-card img { width: 100px; height: 100px; object-fit: cover; border-radius: 50%; margin-right: 20px; border: 2px solid #0a0a0c; }
 
-.form-group label {
-    display: block;
-    margin-bottom: 5px;
-}
+/* Tabs */
+.tab-buttons { display: flex; justify-content: center; margin-bottom: 20px; }
+.tab-btn { background: transparent; color: var(--text-color); border: 1px solid #0a0a0c; padding: 10px 20px; cursor: pointer; font-family: var(--font-main); font-size: 1.1rem; transition: all 0.2s; }
+.tab-btn.active { background: var(--accent-pink); color: #fff; border-color: var(--accent-pink); box-shadow: 0 0 10px rgba(255,42,133,0.4); }
+.tab-content { display: none; }
+.tab-content.active { display: block; }
 
-.form-group input {
-    width: 100%;
-    padding: 10px;
-    background: #000;
-    border: 1px solid #444;
-    color: #fff;
-    font-family: var(--font-main);
-}
+/* Form Elements */
+.form-group { margin-bottom: 1.5rem; }
+.form-group label { display: block; margin-bottom: 5px; font-weight: bold; }
+.form-group input { width: 100%; padding: 10px; background: #f4f4f8; border: 1px solid #0a0a0c; color: #0a0a0c; font-family: var(--font-main); }
+.form-group input:focus { outline: none; border-color: var(--accent-pink); }
 
 .submit-btn {
-    background: var(--accent-color);
+    background: var(--accent-pink);
     color: #fff;
     border: none;
     padding: 15px 30px;
@@ -125,13 +128,63 @@ main {
     cursor: pointer;
     font-family: var(--font-main);
     text-transform: uppercase;
+    width: 100%;
 }
 
-.submit-btn:hover {
-    background: #cc0000;
+.submit-btn:hover { background: #ff0066; box-shadow: 0 0 15px rgba(255,42,133,0.6); }
+
+/* =========================================
+   DARK MODE OVERRIDES
+   ========================================= */
+body.dark-mode {
+    --bg-color: #0a0a0c; /* Deep Black */
+    --text-color: #e0e0e0;
+    --accent-blue: #00f0ff; /* Bright Cyan restored for dark mode borders/headings */
 }
 
-#form-status {
-    margin-top: 15px;
-    font-weight: bold;
+body.dark-mode header {
+    background: linear-gradient(180deg, rgba(255,42,133,0.05) 0%, rgba(0,0,0,0) 100%);
+    border-bottom: 2px solid #222;
+}
+
+body.dark-mode .logo-container img {
+    filter: drop-shadow(0px 0px 8px rgba(255, 42, 133, 0.5));
+}
+
+body.dark-mode nav a:hover, body.dark-mode nav a.active {
+    border-bottom: 2px solid var(--accent-blue); /* Underlines turn cyan in dark mode */
+}
+
+body.dark-mode .tv-static-overlay {
+    opacity: 0.15; 
+    filter: invert(0); /* White dust for dark background */
+}
+
+body.dark-mode .content-box, 
+body.dark-mode .karaoke-form-section,
+body.dark-mode .artist-card {
+    background: #151518;
+    border: 1px solid #333;
+    border-top: 3px solid var(--accent-blue);
+    box-shadow: none; /* Removes the pink drop shadow */
+}
+
+body.dark-mode .artist-card img {
+    border: 2px solid var(--accent-pink);
+}
+
+body.dark-mode h2, 
+body.dark-mode h3,
+body.dark-mode .form-group label {
+    color: var(--accent-blue); /* Headings pop in cyan against the dark cards */
+}
+
+body.dark-mode .tab-btn {
+    border-color: #333;
+}
+
+body.dark-mode .form-group input {
+    background: #080808;
+    color: #fff;
+    border: 1px solid #444;
 }
