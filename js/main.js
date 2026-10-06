@@ -135,20 +135,23 @@ function initTheme() {
     // Check the browser's local storage for a saved preference
     const savedTheme = localStorage.getItem('toogintv-theme');
     
-    // Apply light mode on load if that was their last choice
-    if (savedTheme === 'light') {
-        body.classList.add('light-mode');
-        themeIcon.textContent = '🌙'; // Show moon to switch back to dark
+    // Apply dark mode on load if that was their last choice
+    if (savedTheme === 'dark') {
+        body.classList.add('dark-mode');
+        themeIcon.textContent = '☀️'; // Show sun to switch back to light
+    } else {
+        // Ensure default icon is moon if no preference or 'light' is saved
+        themeIcon.textContent = '🌙'; 
     }
 
     // Toggle event listener
     themeBtn.addEventListener('click', () => {
-        body.classList.toggle('light-mode');
-        const isLight = body.classList.contains('light-mode');
+        body.classList.toggle('dark-mode');
+        const isDark = body.classList.contains('dark-mode');
         
         // Swap icon and save the preference
-        themeIcon.textContent = isLight ? '🌙' : '☀️';
-        localStorage.setItem('toogintv-theme', isLight ? 'light' : 'dark');
+        themeIcon.textContent = isDark ? '☀️️' : '🌙';
+        localStorage.setItem('toogintv-theme', isDark ? 'dark' : 'light');
     });
 }
 
