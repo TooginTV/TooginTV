@@ -1,25 +1,23 @@
 // --- Theme Toggle ---
 const themeToggle = document.getElementById('themeToggle');
 if (themeToggle) {
-    if (localStorage.getItem('toogintv-theme') === 'dark') {
-        document.body.classList.add('dark-mode');
-    }
-    
+    if (localStorage.getItem('toogintv-theme') === 'dark') { document.body.classList.add('dark-mode'); }
     themeToggle.addEventListener('click', () => {
         document.body.classList.toggle('dark-mode');
-        const isDark = document.body.classList.contains('dark-mode');
-        localStorage.setItem('toogintv-theme', isDark ? 'dark' : 'light');
+        localStorage.setItem('toogintv-theme', document.body.classList.contains('dark-mode') ? 'dark' : 'light');
     });
 }
 
-// --- Media Tabs Logic & TikTok Fix ---
-function switchTab(tabName) {
+// --- Corrected Media Tabs Logic ---
+function switchTab(tabName, event) {
     document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
     document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
     
-    event.target.classList.add('active');
+    // Corrected to safely handle the event object
+    if(event) { event.target.classList.add('active'); }
     document.getElementById(`tab-${tabName}`).classList.add('active');
 
+    // Force TikTok re-render
     if (tabName === 'tiktok' && typeof tiktokEmbed !== 'undefined') {
         const script = document.createElement('script');
         script.src = "https://www.tiktok.com/embed.js";
@@ -28,10 +26,10 @@ function switchTab(tabName) {
     }
 }
 
-// --- Twitch Embed Logic (Index Page Only) ---
-if (document.getElementById('twitch-embed')) {
-    const layoutMode = window.innerWidth >= 900 ? "video-with-chat" : "video";
-    const embed = new Twitch.Embed("twitch-embed", {
+// --- Twitch Player Generation & API Logic ---
+function createTwitchPlayer(containerId, isPip = false) {
+    const layoutMode = (window.innerWidth >= 900 && !isPip) ? "video-with-chat" : "video";
+    const embed = new Twitch.Embed(containerId, {
         width: "100%", height: "100%", channel: "toogintv", layout: layoutMode,
         parent: TOOGIN_CONFIG.TWITCH_PARENT_DOMAINS, autoplay: true, muted: false
     });
@@ -51,7 +49,60 @@ if (document.getElementById('twitch-embed')) {
             }
         });
     });
+    return embed;
 }
+
+// --- Picture-in-Picture (PiP) Observer & Global State ---
+let userClosedPip = false;
+
+function closePip() {
+    userClosedPip = true;
+    sessionStorage.setItem('pipActive', 'false');
+    const wrapper = document.getElementById('twitch-embed-wrapper');
+    if (wrapper) wrapper.classList.remove('floating-pip');
+    
+    // If we closed the globally injected PiP on a sub-page, completely remove it
+    if (!document.getElementById('video-section')) {
+        wrapper.remove();
+    }
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+    const videoSection = document.getElementById('video-section');
+    const twitchWrapper = document.getElementById('twitch-embed-wrapper');
+
+    // SCROLL PiP Logic (Only runs on the Index Page)
+    if (videoSection && twitchWrapper) {
+        createTwitchPlayer('twitch-embed', false);
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                const isTwitchActive = document.getElementById('tab-twitch').classList.contains('active');
+                if (!entry.isIntersecting && isTwitchActive && !userClosedPip) {
+                    twitchWrapper.classList.add('floating-pip');
+                    sessionStorage.setItem('pipActive', 'true');
+                } else {
+                    twitchWrapper.classList.remove('floating-pip');
+                    if(isTwitchActive) sessionStorage.setItem('pipActive', 'true'); // Keep true for cross-page intent
+                }
+            });
+        }, { threshold: 0.1 });
+        observer.observe(videoSection);
+    }
+
+    // CROSS-PAGE PiP Logic (Runs on Sub-pages like Schedule, Guests, etc.)
+    if (!videoSection && sessionStorage.getItem('pipActive') === 'true') {
+        const globalPip = document.createElement('div');
+        globalPip.id = "twitch-embed-wrapper";
+        globalPip.className = "floating-pip";
+        globalPip.innerHTML = `
+            <button class="pip-close-btn" onclick="closePip()">X</button>
+            <div id="twitch-embed" style="width: 100%; height: 100%;"></div>
+        `;
+        document.body.appendChild(globalPip);
+        createTwitchPlayer('twitch-embed', true);
+    }
+});
 
 // --- Vercel Countdown Logic (Index Page Only) ---
 if (document.getElementById('countdown')) {
@@ -74,7 +125,6 @@ if (document.getElementById('countdown')) {
     async function initCountdown() {
         let targetDate = getFallbackDate();
         let targetTitle = "Toogin Thursday Jam";
-
         try {
             const res = await fetch('/api/get-next-broadcast');
             if (res.ok) {
