@@ -1,17 +1,18 @@
 # TooginTV Style Checklist & Changelog
 
 ## Core Brand Identity
-*   **Primary Background:** Deep Black (`#0a0a0c`)
-*   **Toogin Pink:** `#ff2a85` (Used for active states, primary buttons, and warnings)
-*   **Toogin Cyan:** `#00f0ff` (Used for headers, passive links, and borders)
-*   **Typography:** `'Courier New', Courier, monospace` (Maintains the raw, technical, terminal-like aesthetic)
-*   **Texture:** TV-Static overlay (`opacity: 0.15`) via SVG or transparent stardust pattern to mimic the distressed logo.
-*   **Logo Asset:** `black and pink.png`
+* **Primary Palette**: 
+  * Toogin Cyan (`#4ce0e4`)
+  * Toogin Pink (`#eb74ab`)
+  * Deep Black (`#000000`) for dark mode contrast.
+* **Typography**: `'Courier New', Courier, monospace` (Maintains the raw, technical, terminal-like aesthetic).
+* **Texture**: Heavy TV-Static SVG noise filter. Must remain prominent to mimic the distressed logo.
+* **Logo Asset**: `pink and blue.png` (or `black and pink.png` depending on active theme).
 
-## Design Principles
-1.  **Preservation:** Never alter historical page copy unless explicitly requested.
-2.  **Contrast:** Ensure neon pink/cyan elements pass WCAG contrast ratios against the black background.
-3.  **Responsiveness:** All media cards (Twitch/TikTok) must flex to 100% width on mobile viewports (max-width 768px).
+## Design Principles & Security
+1. **Preservation**: Never alter historical page copy or established Toogin-jamming descriptions unless explicitly requested.
+2. **Security**: All text inputs (Karaoke form) must be sanitized. SQL injection/XSS vectors minimized by relying on Vercel backend APIs.
+3. **API Keys**: Calendar and Twitch keys must strictly reside in Vercel environment variables, never in client-side JS.
 
 ## Changelog
-*   **2026-10-09:** Initialized checklist. Standardized Pink/Cyan hex codes. Diagnosed hidden-tab rendering bugs for media embeds.
+* **2026-10-09**: Initialized checklist. Locked in Cyan/Pink grunge aesthetic. Diagnosed hidden-tab rendering bugs for Twitch and TikTok embeds. Implemented lazy-loading lifecycle patch.
