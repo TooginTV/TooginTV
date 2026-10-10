@@ -1,74 +1,65 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TooginTV - Live Stream & Jam Sessions</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Montserrat:wght@700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/styles.css">
+     <meta charset="UTF-8">
+     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+     <title>TooginTV - Live Stream & Jam Sessions</title>
+     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Montserrat:wght@700;800&display=swap" rel="stylesheet">
+     <link rel="stylesheet" href="css/styles.css">
 </head>
 <body class="">
-    <header>
-        <img src="black and pink.png" alt="TooginTV Logo" class="logo-img">
-        <nav class="header-controls">
-            <a href="index.html" class="btn">Home</a>
-            <a href="karaoke.html" class="btn btn-outline">Karaoke Event</a>
-            <a href="schedule.html" class="btn btn-outline">Schedule</a>
-            <a href="guests.html" class="btn btn-outline">Guests</a>
-            <a href="community.html" class="btn btn-outline">Community</a>
-            <button class="btn btn-outline" id="themeToggle">🌓 Theme</button>
-        </nav>
-    </header>
-
-    <main>
-        <!-- 1. Countdown Section -->
-        <section class="card schedule-section text-center">
-            <h2>Next Live Stream</h2>
-            <div class="schedule-text">
-                <span class="event-title" id="eventTitleDisplay">Fetching Schedule...</span>
-                @ <span id="localTimeDisplay" class="local-time">...</span>
-            </div>
-            <div class="countdown" id="countdown">
-                <div class="time-box"><span id="days">00</span><small>Days</small></div>
-                <div class="time-box"><span id="hours">00</span><small>Hours</small></div>
-                <div class="time-box"><span id="mins">00</span><small>Mins</small></div>
-                <div class="time-box"><span id="secs">00</span><small>Secs</small></div>
-            </div>
-        </section>
-
-        <!-- 2. Video Player Section -->
-        <section class="card media-tabs-wrapper text-center" id="video-section">
-            <div class="tabs-header">
-                <button class="tab-btn active" onclick="switchTab('twitch', event)">Live & VODs</button>
-                <button class="tab-btn" onclick="switchTab('tiktok', event)">TikTok Shorts</button>
-            </div>
-            
-            <div id="tab-twitch" class="tab-content active">
-                <div id="twitch-embed-wrapper">
-                    <button class="pip-close-btn" onclick="closePip()">X</button>
-                    <div id="twitch-embed" style="width: 100%; height: 100%;"></div>
-                </div>
-            </div>
-            
-            <div id="tab-tiktok" class="tab-content">
-                <div class="tiktok-wrapper">
-                    <blockquote class="tiktok-embed" cite="https://www.tiktok.com/@toogintvofficial" data-unique-id="toogintvofficial" data-embed-type="creator" style="max-width: 780px; min-width: 288px;" >
-                        <section><a target="_blank" href="https://www.tiktok.com/@toogintvofficial?refer=creator_embed">@toogintvofficial</a></section>
-                    </blockquote>
-                </div>
-            </div>
-        </section>
-
-        <!-- 3. What is TooginTV Section (Moved Below Video) -->
-        <section class="card text-center">
-            <h2>What is TooginTV?</h2>
-            <p><strong>TooginTV is a music-related variety show that has been broadcasting live on Twitch every Thursday night for 4 years.</strong></p>
-            <p>Driven by the ancient streaming art of "Toogin-style" jamming, it's a weekly session where talented musicians spontaneously gather to play whatever songs they feel like live to the internet!</p>
-        </section>
-    </main>
-
-    <script src="js/config.js"></script>
-    <script src="https://embed.twitch.tv/embed/v1.js"></script>
-    <script src="js/main.js"></script>
+     <header>
+         <img src="black and pink.png" alt="TooginTV Logo" class="logo-img">
+         <nav class="header-controls">
+             <a href="index.html" class="btn">Home</a>
+             <a href="karaoke.html" class="btn btn-outline">Karaoke Event</a>
+             <a href="schedule.html" class="btn btn-outline">Schedule</a>
+             <a href="guests.html" class="btn btn-outline">Guests</a>
+             <a href="community.html" class="btn btn-outline">Community</a>
+             <button class="btn btn-outline" id="themeToggle">ðŸŒ“ Theme</button>
+         </nav>
+     </header>
+     <main>
+         <section class="card schedule-section text-center">
+             <h2>Next Live Stream</h2>
+             <div class="schedule-text">
+                 <span class="event-title" id="eventTitleDisplay">Fetching Schedule...</span>
+                 @ <span id="localTimeDisplay" class="local-time">...</span>
+             </div>
+             <div class="countdown" id="countdown">
+                 <div class="time-box"><span id="days">00</span><small>Days</small></div>
+                 <div class="time-box"><span id="hours">00</span><small>Hours</small></div>
+                 <div class="time-box"><span id="mins">00</span><small>Mins</small></div>
+                 <div class="time-box"><span id="secs">00</span><small>Secs</small></div>
+             </div>
+         </section>
+         <section class="card media-tabs-wrapper text-center" id="video-section">
+             <div class="tabs-header">
+                 <button class="tab-btn active" onclick="switchTab('twitch', event)">Live & VODs</button>
+                 <button class="tab-btn" onclick="switchTab('tiktok', event)">TikTok Shorts</button>
+             </div>
+             <div id="tab-twitch" class="tab-content active">
+                 <div id="twitch-embed-wrapper">
+                     <button class="pip-close-btn" onclick="closePip()">X</button>
+                     <div id="twitch-embed" style="width: 100%; height: 100%;"></div>
+                 </div>
+             </div>
+             <div id="tab-tiktok" class="tab-content">
+                 <div class="tiktok-wrapper">
+                     <blockquote class="tiktok-embed" cite="https://www.tiktok.com/@toogintvofficial" data-unique-id="toogintvofficial" data-embed-type="creator" style="max-width: 780px; min-width: 288px;" >
+                         <section><a target="_blank" href="https://www.tiktok.com/@toogintvofficial?refer=creator_embed">@toogintvofficial</a></section>
+                     </blockquote>
+                 </div>
+             </div>
+         </section>
+         <section class="card text-center">
+             <h2>What is TooginTV?</h2>
+             <p><strong>TooginTV is a music-related variety show that has been broadcasting live on Twitch every Thursday night for 4 years.</strong></p>
+             <p>Driven by the ancient streaming art of "Toogin-style" jamming, it's a weekly session where talented musicians spontaneously gather to play whatever songs they feel like live to the internet!</p>
+         </section>
+     </main>
+     <script src="js/config.js"></script>
+     <script src="https://embed.twitch.tv/embed/v1.js"></script>
+     <script src="js/main.js"></script>
 </body>
 </html>
