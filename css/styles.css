@@ -120,21 +120,63 @@ main {
 .card h2 { color: var(--primary-pink); margin-bottom: 1rem; font-size: 1.8rem; }
 .card p { margin-bottom: 1rem; color: inherit; opacity: 0.9; }
 
+/* Broadcast Schedule & Countdown */
 .schedule-section { text-align: center; display: flex; flex-direction: column; align-items: center; gap: 1.5rem; }
 .event-title { color: var(--primary-cyan); font-size: 1.5rem; font-family: 'Montserrat', sans-serif; text-transform: uppercase; display: block; margin-bottom: 0.5rem; }
+body.light-mode .event-title { color: #d15d92; }
 .local-time { color: #ffffff; background: #222; padding: 0.3rem 0.8rem; border-radius: 6px; font-weight: 700; display: inline-block; }
 .countdown { display: flex; gap: 1.5rem; justify-content: center; margin-top: 1rem; }
 .time-box { display: flex; flex-direction: column; align-items: center; background-color: var(--bg-color); padding: 1.2rem; border-radius: 12px; min-width: 90px; border: 2px solid rgba(235, 116, 171, 0.3); box-shadow: inset 0 2px 5px rgba(0,0,0,0.2); }
 .time-box span { font-family: 'Montserrat', sans-serif; font-size: 2.5rem; font-weight: 800; color: var(--primary-pink); line-height: 1; }
 .time-box small { font-weight: 500; text-transform: uppercase; font-size: 0.8rem; margin-top: 0.5rem; opacity: 0.9; }
 
+/* Media Tabs */
 .tabs-header { display: flex; gap: 1rem; margin-bottom: 1.5rem; justify-content: center; border-bottom: 2px solid var(--border-color); padding-bottom: 0.5rem; }
 .tab-btn { background: transparent; border: none; color: var(--text-color); font-family: 'Montserrat', sans-serif; font-size: 1.3rem; font-weight: 700; cursor: pointer; padding: 0.5rem 1rem; opacity: 0.5; transition: opacity 0.2s ease, color 0.2s ease; }
 .tab-btn:hover { opacity: 0.8; }
 .tab-btn.active { opacity: 1; color: var(--primary-pink); border-bottom: 3px solid var(--primary-pink); }
 .tab-content { display: none; width: 100%; border: 2px solid var(--primary-pink); border-radius: 8px; overflow: hidden; background: #000; }
 .tab-content.active { display: block; }
+
+/* Floating PiP Player */
+#twitch-embed-wrapper { width: 100%; transition: all 0.3s ease; }
 #twitch-embed { width: 100%; height: 600px; }
+.floating-pip {
+    position: fixed !important;
+    bottom: 20px;
+    right: 20px;
+    width: 400px !important;
+    height: 225px !important;
+    z-index: 9999;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.8);
+    border: 3px solid var(--primary-cyan);
+    border-radius: 12px;
+    overflow: hidden;
+    animation: slideIn 0.3s ease-out forwards;
+}
+.pip-close-btn {
+    position: absolute;
+    top: -10px;
+    right: -10px;
+    background: var(--primary-pink);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    font-weight: bold;
+    cursor: pointer;
+    z-index: 10000;
+    display: none;
+}
+.floating-pip .pip-close-btn { display: block; }
+.floating-pip #twitch-embed { height: 100% !important; }
+
+@keyframes slideIn {
+    from { transform: translateY(100px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
 .tiktok-wrapper { display: flex; justify-content: center; background: var(--bg-color); padding: 1rem; }
 
 @media (max-width: 768px) {
@@ -142,4 +184,5 @@ main {
     .time-box { min-width: 70px; padding: 0.8rem; }
     .time-box span { font-size: 1.8rem; }
     #twitch-embed { height: 400px; }
+    .floating-pip { width: 90% !important; right: 5%; bottom: 10px; }
 }

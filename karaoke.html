@@ -1,56 +1,45 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TooginTV - Live Karaoke Event</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Montserrat:wght@700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/styles.css">
-    <style>
-        .hero-section h1 { color: var(--primary-pink); margin-bottom: 1rem; font-size: 2.8rem; text-transform: uppercase; letter-spacing: 1px; line-height: 1.2; }
-        .hero-section p { font-size: 1.2rem; margin-bottom: 1.5rem; opacity: 0.9; }
-        .hero-section strong { color: var(--primary-cyan); font-size: 1.3rem; }
-        body:not(.dark-mode) .hero-section strong { color: #d15d92; }
-        .request-card { display: flex; flex-direction: column; align-items: center; gap: 1rem; }
-        .request-card h2 { font-size: 2rem; margin-bottom: 0.5rem; color: var(--primary-cyan); }
-        .highlight-box { background-color: rgba(235, 116, 171, 0.1); border: 2px dashed var(--primary-pink); padding: 1rem; border-radius: 8px; margin: 1rem 0; font-weight: 500; }
-    </style>
+     <meta charset="UTF-8">
+     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+     <title>TooginTV - Live Karaoke Event</title>
+     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Montserrat:wght@700;800&display=swap" rel="stylesheet">
+     <link rel="stylesheet" href="css/styles.css">
 </head>
-<body class=""> 
-    <header>
-        <img src="black and pink.png" alt="TooginTV Logo" class="logo-img">
-        <nav class="header-controls">
-            <a href="index.html" class="btn btn-outline">Home</a>
-            <a href="karaoke.html" class="btn">Karaoke Event</a>
-            <a href="schedule.html" class="btn btn-outline">Schedule</a>
-            <a href="guests.html" class="btn btn-outline">Guests</a>
-            <a href="community.html" class="btn btn-outline">Community</a>
-            <button class="btn btn-outline" id="themeToggle">🌓 Theme</button>
-        </nav>
-    </header>
-
-    <main>
-        <section class="card hero-section text-center">
-            <h1>Live Band Karaoke Event</h1>
-            <p>Get ready to take the stage with a real, live band backing you up on <strong>December 13th</strong>!</p>
-            <p>Because we're planning ahead, the floodgates are wide open—we are currently accepting any song request you can dream up.</p>
-        </section>
-
-        <section class="card request-card text-center">
-            <h2>What do you want to sing?</h2>
-            <p>Don't wait to submit your track: as we get closer to the big night, limits will kick in and song choices will be strictly capped.</p>
-            <div class="highlight-box">
-                When filling out the form below, please be sure to enter your requested songs in the exact format: <br>
-                <strong>"Song title" - "Artist"</strong>
-            </div>
-            <a href="#" id="karaokeFormBtn" target="_blank" class="btn" style="padding: 1.2rem 2.5rem; font-size: 1.1rem;">Open Song Request Form</a>
-        </section>
-    </main>
-
-    <script src="js/config.js"></script>
-    <script src="js/main.js"></script>
-    <script>document.getElementById('karaokeFormBtn').href = TOOGIN_CONFIG.KARAOKE_FORM_URL;</script>
+<body class="">
+     <header>
+         <img src="black and pink.png" alt="TooginTV Logo" class="logo-img">
+         <nav class="header-controls">
+             <a href="index.html" class="btn btn-outline">Home</a>
+             <a href="karaoke.html" class="btn">Karaoke Event</a>
+             <a href="schedule.html" class="btn btn-outline">Schedule</a>
+             <a href="guests.html" class="btn btn-outline">Guests</a>
+             <a href="community.html" class="btn btn-outline">Community</a>
+             <button class="btn btn-outline" id="themeToggle">ðŸŒ“ Theme</button>
+         </nav>
+     </header>
+     <main>
+         <section class="card text-center">
+             <h1 style="color: var(--primary-pink); font-size: 2.8rem; text-transform: uppercase;">Live Band Karaoke Event</h1>
+             <p style="font-size: 1.2rem;">Join us on <strong>December 13th, 7:00 PM - 10:00 PM</strong> at the Rendezvous Pub (149 St & Stony Plain Road)!</p>
+             <div style="margin: 1.5rem auto; padding: 1.5rem; border: 2px solid var(--primary-cyan); border-radius: 8px; max-width: 500px; background: var(--bg-color);">
+                 <h3 style="color: var(--primary-pink); font-size: 1.5rem; margin-bottom: 0.5rem;">Tickets: $15</h3>
+                 <p style="margin-bottom: 0;">Get <strong>$5 off</strong> with a food bank donation.<br>TooginTV Subscribers also save $5!</p>
+             </div>
+         </section>
+         <section class="card text-center" style="display:flex; flex-direction:column; align-items:center;">
+             <h2 style="color: var(--primary-cyan); font-size: 2rem;">What do you want to sing?</h2>
+             <div style="background: rgba(235,116,171,0.1); border: 2px dashed var(--primary-pink); padding: 1rem; border-radius: 8px; margin: 1rem 0;">
+                 When filling out the form below, please enter your requested songs in the exact format: <br>
+                 <strong>"Song title" - "Artist"</strong>
+             </div>
+             <a href="#" id="karaokeFormBtn" target="_blank" class="btn" style="padding: 1.2rem 2.5rem; font-size: 1.1rem;">Open Song Request Form</a>
+         </section>
+     </main>
+     <script src="js/config.js"></script>
+     <script src="https://embed.twitch.tv/embed/v1.js"></script>
+     <script src="js/main.js"></script>
+     <script>document.getElementById('karaokeFormBtn').href = TOOGIN_CONFIG.KARAOKE_FORM_URL;</script>
 </body>
 </html>

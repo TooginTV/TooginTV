@@ -1,23 +1,19 @@
 // --- Theme Toggle ---
 const themeToggle = document.getElementById('themeToggle');
 if (themeToggle) {
-    if (localStorage.getItem('toogintv-theme') === 'dark') {
-        document.body.classList.add('dark-mode');
-    }
-    
+    if (localStorage.getItem('toogintv-theme') === 'dark') { document.body.classList.add('dark-mode'); }
     themeToggle.addEventListener('click', () => {
         document.body.classList.toggle('dark-mode');
-        const isDark = document.body.classList.contains('dark-mode');
-        localStorage.setItem('toogintv-theme', isDark ? 'dark' : 'light');
+        localStorage.setItem('toogintv-theme', document.body.classList.contains('dark-mode') ? 'dark' : 'light');
     });
 }
 
 // --- Media Tabs Logic & TikTok Fix ---
-function switchTab(tabName) {
+function switchTab(tabName, event) {
     document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
     document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
     
-    event.target.classList.add('active');
+    if(event) { event.target.classList.add('active'); }
     document.getElementById(`tab-${tabName}`).classList.add('active');
 
     if (tabName === 'tiktok' && typeof tiktokEmbed !== 'undefined') {
@@ -28,30 +24,101 @@ function switchTab(tabName) {
     }
 }
 
-// --- Twitch Embed Logic (Index Page Only) ---
-if (document.getElementById('twitch-embed')) {
-    const layoutMode = window.innerWidth >= 900 ? "video-with-chat" : "video";
-    const embed = new Twitch.Embed("twitch-embed", {
+// --- Twitch Player Generation & API Logic ---
+let twitchPlayerInstance = null;
+let vodLoaded = false;
+
+function createTwitchPlayer(containerId, isPip = false) {
+    if (twitchPlayerInstance) return twitchPlayerInstance;
+
+    const layoutMode = (window.innerWidth >= 900 && !isPip) ? "video-with-chat" : "video";
+    
+    twitchPlayerInstance = new Twitch.Embed(containerId, {
         width: "100%", height: "100%", channel: "toogintv", layout: layoutMode,
-        parent: TOOGIN_CONFIG.TWITCH_PARENT_DOMAINS, autoplay: true, muted: false
+        parent: TOOGIN_CONFIG.TWITCH_PARENT_DOMAINS, autoplay: true, muted: isPip
     });
 
-    embed.addEventListener(Twitch.Embed.VIDEO_READY, () => {
-        const player = embed.getPlayer();
+    twitchPlayerInstance.addEventListener(Twitch.Embed.VIDEO_READY, () => {
+        const player = twitchPlayerInstance.getPlayer();
+        
         player.addEventListener(Twitch.Player.OFFLINE, async () => {
+            if (vodLoaded) return; 
+            vodLoaded = true;
+            console.log("Channel is Offline. Fetching VOD via Vercel...");
+
             try {
                 const res = await fetch('/api/get-twitch-vod');
                 if (res.ok) {
                     const data = await res.json();
-                    if (data.videoId) { player.setVideo(data.videoId); return; }
+                    if (data.videoId) { 
+                        player.setVideo(data.videoId); 
+                        return; 
+                    }
                 }
-                throw new Error("No VOD found");
+                throw new Error("No VOD found via API");
             } catch (error) {
+                console.error("VOD fetch failed, using fallback:", error);
                 player.setVideo(TOOGIN_CONFIG.FALLBACK_VOD_ID);
             }
         });
     });
+
+    return twitchPlayerInstance;
 }
+
+// --- Picture-in-Picture (PiP) Observer & Global State ---
+let userClosedPip = false;
+
+function closePip() {
+    userClosedPip = true;
+    sessionStorage.setItem('pipActive', 'false');
+    const wrapper = document.getElementById('twitch-embed-wrapper');
+    if (wrapper) wrapper.classList.remove('floating-pip');
+    
+    if (!document.getElementById('video-section')) {
+        wrapper.remove();
+    }
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+    const videoSection = document.getElementById('video-section');
+    const twitchWrapper = document.getElementById('twitch-embed-wrapper');
+
+    if (videoSection && twitchWrapper) {
+        const wasFloating = sessionStorage.getItem('pipActive') === 'true';
+        if (wasFloating && !userClosedPip) {
+            twitchWrapper.classList.add('floating-pip');
+        }
+
+        createTwitchPlayer('twitch-embed', false);
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                const isTwitchActive = document.getElementById('tab-twitch').classList.contains('active');
+                if (!entry.isIntersecting && isTwitchActive && !userClosedPip) {
+                    twitchWrapper.classList.add('floating-pip');
+                    sessionStorage.setItem('pipActive', 'true');
+                } else {
+                    twitchWrapper.classList.remove('floating-pip');
+                    if(isTwitchActive) sessionStorage.setItem('pipActive', 'true'); 
+                }
+            });
+        }, { threshold: 0.1 });
+        observer.observe(videoSection);
+    }
+
+    if (!videoSection && sessionStorage.getItem('pipActive') === 'true') {
+        const globalPip = document.createElement('div');
+        globalPip.id = "twitch-embed-wrapper";
+        globalPip.className = "floating-pip";
+        globalPip.innerHTML = `
+            <button class="pip-close-btn" onclick="closePip()">X</button>
+            <div id="twitch-embed" style="width: 100%; height: 100%;"></div>
+        `;
+        document.body.appendChild(globalPip);
+        createTwitchPlayer('twitch-embed', true);
+    }
+});
 
 // --- Vercel Countdown Logic (Index Page Only) ---
 if (document.getElementById('countdown')) {
@@ -74,7 +141,6 @@ if (document.getElementById('countdown')) {
     async function initCountdown() {
         let targetDate = getFallbackDate();
         let targetTitle = "Toogin Thursday Jam";
-
         try {
             const res = await fetch('/api/get-next-broadcast');
             if (res.ok) {
