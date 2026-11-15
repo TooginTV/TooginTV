@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TooginTV — Band Veto & Show Ballot</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Montserrat:wght@700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/styles.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    :root {
+      --primary-cyan: #4ce0e4;
+      --primary-pink: #eb74ab;
+      --pink-hover: #d15d92;
+      --bg-color: var(--primary-cyan);
+      --text-color: #222222;
+      --card-bg: #ffffff;
+      --card-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+      --border-color: rgba(0, 0, 0, 0.12);
+      --subcard-bg: #f4f8f9;
+    }
+    body.dark-mode {
+      --bg-color: #0d0d0d;
+      --text-color: #f5f5f5;
+      --card-bg: #1a1a1a;
+      --card-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+      --border-color: rgba(255, 255, 255, 0.12);
+      --subcard-bg: #111111;
+    }
+    .toogin-panel {
+      background-color: var(--card-bg);
+      color: var(--text-color);
+      border: 2px solid var(--border-color);
+      border-radius: 16px;
+      box-shadow: var(--card-shadow);
+    }
+    .toogin-subcard {
+      background-color: var(--subcard-bg);
+      color: var(--text-color);
+      border: 1.5px solid var(--border-color);
+      border-radius: 14px;
+    }
+    .toogin-input {
+      background-color: var(--subcard-bg);
+      color: var(--text-color);
+      border: 1.5px solid var(--border-color);
+      border-radius: 12px;
+      padding: 0.6rem 0.9rem;
+    }
+    .btn-cyan {
+      background-color: var(--primary-cyan);
+      color: #111111;
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 800;
+      border-radius: 50px;
+      padding: 0.55rem 1.15rem;
+      text-transform: uppercase;
+      font-size: 0.78rem;
+      letter-spacing: 0.4px;
+      transition: all 0.2s ease;
+    }
+    .btn-pink {
+      background-color: var(--primary-pink);
+      color: #ffffff;
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 800;
+      border-radius: 50px;
+      padding: 0.55rem 1.15rem;
+      text-transform: uppercase;
+      font-size: 0.78rem;
+      letter-spacing: 0.4px;
+      transition: all 0.2s ease;
+      box-shadow: 0 4px 10px rgba(235, 116, 171, 0.3);
+    }
+  </style>
+</head>
+<body class="dark-mode">
+
+  <!-- HEADER -->
+  <header style="margin-bottom: 1rem; padding: 1.5rem 0 1rem 0;">
+    <a href="index.html">
+      <img src="../black and pink.png" onerror="this.onerror=null;this.src='TooginLogo.jpg';" alt="TooginTV Logo" class="logo-img" style="max-width: 200px;" />
+    </a>
+
+    <nav class="header-controls">
+      <a href="karaoke.html" class="btn">🎤 Karaoke Song List</a>
+      <a href="queue.html" class="btn btn-outline">📋 Live Queue</a>
+      <button class="btn btn-outline" id="themeToggle" type="button">🌓 Theme</button>
+    </nav>
+
+    <div id="headerUserBar" class="hidden flex flex-wrap items-center justify-center gap-2 text-xs mt-1">
+      <span id="roleBadge" class="px-3 py-1 rounded-full font-bold uppercase tracking-wider text-[11px]" style="background: rgba(76,224,228,0.15); border: 1px solid var(--primary-cyan); color: var(--primary-cyan);"></span>
+      <button onclick="openProfileModal()" class="px-3 py-1 rounded-full font-bold text-xs" style="background: rgba(235,116,171,0.18); border: 1px solid var(--primary-pink);">
+        ✎ <span id="navPerformerName">Performer</span>
+      </button>
+      <button onclick="handleSignOut()" class="px-3 py-1 rounded-full text-xs opacity-75 hover:opacity-100" style="border: 1px solid var(--border-color);">
+        Sign Out
+      </button>
+    </div>
+  </header>
+
+  <main style="max-width: 1050px; gap: 1.25rem;">
+
+    <!-- NON-BLOCKING STATUS TOAST -->
+    <div id="toastBanner" class="hidden rounded-xl px-4 py-3 text-xs font-bold border text-center"></div>
+
+    <!-- ================================================================== -->
+    <!-- PASSWORD RECOVERY MODAL                                            -->
+    <!-- ================================================================== -->
+    <div id="recoveryModal" class="hidden fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4">
+      <form onsubmit="submitNewPassword(event)" class="toogin-panel max-w-md w-full p-6 space-y-4 text-xs">
+        <h2 class="text-lg font-bold" style="color: var(--primary-pink);">🔑 Set Your New Password</h2>
+        <input id="newRecoveryPassword" type="password" required minlength="6" placeholder="New password (min 6 chars)..." class="toogin-input w-full" />
+        <input id="confirmRecoveryPassword" type="password" required minlength="6" placeholder="Confirm new password..." class="toogin-input w-full" />
+        <div id="recoveryError" class="text-xs text-red-400 font-mono"></div>
+        <div class="flex justify-end gap-2">
+          <button type="button" onclick="document.getElementById('recoveryModal').classList.add('hidden')" class="btn-cyan">Cancel</button>
+          <button type="submit" class="btn-pink">Update Password</button>
+        </div>
+      </form>
+    </div>
+
+    <!-- ================================================================== -->
+    <!-- EDIT PERFORMER PROFILE MODAL                                       -->
+    <!-- ================================================================== -->
+    <div id="profileModal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+      <div class="toogin-panel max-w-md w-full p-6 space-y-4 text-xs">
+        <div class="flex items-center justify-between">
+          <h2 class="text-base font-bold" style="color: var(--primary-pink);">🎸 Your Performer Profile</h2>
+          <button onclick="closeProfileModal()" class="text-sm font-bold">✕</button>
+        </div>
+        <div class="space-y-1">
+          <label class="block font-semibold">Stage / Performer Name *</label>
+          <input id="editPerformerName" type="text" class="toogin-input w-full font-bold" />
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block opacity-75 mb-1">First Name</label>
+            <input id="editFirstName" type="text" class="toogin-input w-full" />
+          </div>
+          <div>
+            <label class="block opacity-75 mb-1">Last Name</label>
+            <input id="editLastName" type="text" class="toogin-input w-full" />
+          </div>
+        </div>
+        <div class="flex justify-end gap-2 pt-2">
+          <button onclick="closeProfileModal()" class="btn-cyan">Cancel</button>
+          <button onclick="saveProfileChanges()" class="btn-pink">Save Profile</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================================================================== -->
+    <!-- IN-PAGE CHART IMAGE LIGHTBOX MODAL                                 -->
+    <!-- ================================================================== -->
+    <div id="chartLightbox" class="hidden fixed inset-0 bg-black/90 z-50 flex flex-col items-center justify-center p-4" onclick="closeChartLightbox()">
+      <div class="max-w-3xl w-full flex items-center justify-between mb-2">
+        <span id="lightboxTitle" class="text-sm font-bold" style="color: var(--primary-cyan);">Chart Preview</span>
+        <div class="flex items-center gap-2">
+          <a id="lightboxRawLink" href="#" target="_blank" rel="noopener" onclick="event.stopPropagation()" class="btn-cyan text-xs">Open Full Image ↗</a>
+          <button class="btn-pink text-xs">Close ✕</button>
+        </div>
+      </div>
+      <img id="lightboxImg" src="" alt="Chart Scan" class="max-h-[84vh] max-w-full object-contain rounded-xl border border-zinc-700" onclick="event.stopPropagation()" />
+    </div>
+
+    <!-- ================================================================== -->
+    <!-- AUTHENTICATION CARD (SHOWN WHEN LOGGED OUT)                        -->
+    <!-- ================================================================== -->
+    <section id="authSection" class="toogin-panel max-w-md mx-auto w-full p-6 space-y-5">
+      <div class="text-center space-y-1">
+        <h2 class="text-lg font-extrabold" style="color: var(--primary-pink); margin-bottom: 0;">🎸 Band Veto Stage Sign-In</h2>
+        <p class="text-xs opacity-80">2 vetoes pulls a song from the upcoming show • Transparent band voting</p>
+      </div>
+
+      <div class="grid grid-cols-2 gap-2.5 text-xs">
+        <button onclick="signInWithProvider('google')" type="button"
+          class="flex items-center justify-center gap-2 bg-white hover:bg-zinc-200 text-zinc-900 font-bold py-2.5 px-3 rounded-xl border border-zinc-300 transition">
+          <span>G</span> Google SSO
+        </button>
+        <button onclick="signInWithProvider('facebook')" type="button"
+          class="flex items-center justify-center gap-2 bg-[#1877F2] hover:bg-[#166fe5] text-white font-bold py-2.5 px-3 rounded-xl transition">
+          <span>f</span> Facebook SSO
+        </button>
+      </div>
+
+      <div class="grid grid-cols-3 gap-1 p-1 rounded-xl text-xs" style="background: var(--subcard-bg);">
+        <button id="authTab_login" type="button" onclick="switchAuthTab('login')" class="py-1.5 rounded-lg font-bold" style="background: var(--primary-pink); color: #fff;">Sign In</button>
+        <button id="authTab_signup" type="button" onclick="switchAuthTab('signup')" class="py-1.5 rounded-lg font-bold opacity-75">Create Account</button>
+        <button id="authTab_reset" type="button" onclick="switchAuthTab('reset')" class="py-1.5 rounded-lg font-bold opacity-75">Reset Pass</button>
+      </div>
+
+      <form id="formLogin" onsubmit="handleEmailLogin(event)" class="space-y-3 text-xs">
+        <input id="loginEmail" type="email" required placeholder="Email address" class="toogin-input w-full" />
+        <input id="loginPassword" type="password" required placeholder="Password" class="toogin-input w-full" />
+        <button type="submit" class="btn-pink w-full py-2.5">Sign In</button>
+      </form>
+
+      <form id="formSignup" onsubmit="handleEmailSignup(event)" class="hidden space-y-3 text-xs">
+        <div class="grid grid-cols-2 gap-2">
+          <input id="signupFirst" type="text" required placeholder="First Name *" class="toogin-input w-full" />
+          <input id="signupLast" type="text" required placeholder="Last Name *" class="toogin-input w-full" />
+        </div>
+        <input id="signupPerformer" type="text" required placeholder="Stage / Performer Name * (e.g. Cam, Dave, Jay)" class="toogin-input w-full font-bold" style="border-color: var(--primary-pink);" />
+        <input id="signupEmail" type="email" required placeholder="Email address *" class="toogin-input w-full" />
+        <input id="signupPassword" type="password" required minlength="6" placeholder="Password (min 6 characters) *" class="toogin-input w-full" />
+        <button type="submit" class="btn-cyan w-full py-2.5">Create TooginTV Account</button>
+      </form>
+
+      <form id="formReset" onsubmit="handlePasswordResetRequest(event)" class="hidden space-y-3 text-xs">
+        <p class="opacity-80">Enter your email below and we'll send you a link to set a new password.</p>
+        <input id="resetEmail" type="email" required placeholder="Your account email address" class="toogin-input w-full" />
+        <button type="submit" class="btn-pink w-full py-2.5">Send Password Reset Link</button>
+      </form>
+
+      <div id="authStatusMsg" class="text-center text-xs font-mono"></div>
+    </section>
+
+    <!-- ================================================================== -->
+    <!-- VOTING POOL INTERFACE (SHOWN WHEN LOGGED IN)                       -->
+    <!-- ================================================================== -->
+    <section id="votingAppSection" class="hidden space-y-4">
+
+      <div id="nonBandNotice" class="hidden toogin-panel p-4 text-xs flex flex-wrap items-center justify-between gap-3" style="border-color: var(--primary-pink);">
+        <div>
+          <strong style="color: var(--primary-pink);">🎤 Karaoke Singer Account Active:</strong>
+          Only accounts marked as <strong>Band Members</strong> can cast vetoes. Ask Steve to toggle <strong>Band Member</strong> for <span id="noticePerformerName" class="font-bold underline"></span> in Stage Admin.
+        </div>
+        <div class="flex items-center gap-2 shrink-0">
+          <button onclick="refreshProfileAndPool()" class="btn-cyan">↻ Check Role</button>
+          <a href="karaoke.html" class="btn-pink">Go to Karaoke Song List →</a>
+        </div>
+      </div>
+
+      <!-- Interactive Summary & Filter Cards -->
+      <div class="toogin-panel p-4 space-y-3 text-xs">
+        <div class="grid grid-cols-2 sm:grid-cols-5 gap-2">
+          <button onclick="setFilter('all')" id="fBtn_all" class="toogin-subcard p-2.5 text-left transition">
+            <div class="text-[10px] uppercase font-mono opacity-75">Total Pool</div>
+            <div id="statTotal" class="text-lg font-extrabold mt-0.5">0</div>
+          </button>
+          <button onclick="setFilter('safe')" id="fBtn_safe" class="toogin-subcard p-2.5 text-left transition">
+            <div class="text-[10px] uppercase font-mono text-emerald-400">✅ 0 Vetoes (Safe)</div>
+            <div id="statSafe" class="text-lg font-extrabold text-emerald-400 mt-0.5">0</div>
+          </button>
+          <button onclick="setFilter('warn')" id="fBtn_warn" class="toogin-subcard p-2.5 text-left transition">
+            <div class="text-[10px] uppercase font-mono text-amber-400">⚠️ 1 Veto (Bubble)</div>
+            <div id="statWarn" class="text-lg font-extrabold text-amber-400 mt-0.5">0</div>
+          </button>
+          <button onclick="setFilter('pulled')" id="fBtn_pulled" class="toogin-subcard p-2.5 text-left transition">
+            <div class="text-[10px] uppercase font-mono text-red-400">🚫 2+ Pulled</div>
+            <div id="statPulled" class="text-lg font-extrabold text-red-400 mt-0.5">0</div>
+          </button>
+          <button onclick="setFilter('mine')" id="fBtn_mine" class="col-span-2 sm:col-span-1 toogin-subcard p-2.5 text-left transition">
+            <div class="text-[10px] uppercase font-mono" style="color: var(--primary-pink);">✋ My Vetoes</div>
+            <div id="statMine" class="text-lg font-extrabold mt-0.5" style="color: var(--primary-pink);">0</div>
+          </button>
+        </div>
+
+        <div class="flex flex-wrap items-center justify-between gap-2 pt-1">
+          <input id="searchInput" type="text" placeholder="Search song, artist, key, or band member who vetoed (e.g. Cam)..."
+            oninput="renderPool()" class="toogin-input flex-1 min-w-[220px]" />
+          <button onclick="refreshProfileAndPool()" class="btn-cyan">↻ Refresh</button>
+        </div>
+      </div>
+
+      <!-- Song Cards List -->
+      <div id="songsList" class="space-y-2.5"></div>
+    </section>
+
+  </main>
+
+  <script>
+    (function initTheme() {
+      const saved = localStorage.getItem("toogintv-theme");
+      if (saved === "light") document.body.classList.remove("dark-mode");
+      else document.body.classList.add("dark-mode");
+      const btn = document.getElementById("themeToggle");
+      if (btn) {
+        btn.addEventListener("click", () => {
+          document.body.classList.toggle("dark-mode");
+          const isDark = document.body.classList.contains("dark-mode");
+          localStorage.setItem("toogintv-theme", isDark ? "dark" : "light");
+        });
+      }
+    })();
+
+    const SUPABASE_URL = "https://zupquximivdtynvpynlo.supabase.co";
+    const SUPABASE_KEY = "sb_publishable_ONCBPoG7aOOlejiaayIEDg_r6QiRP8F";
+    const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    let CURRENT_USER = null;
+    let CURRENT_PROFILE = null;
+    let POOL_SONGS = [];
+    let VETO_VOTES = [];
+    let CURRENT_FILTER = "all";
+
+    function safeHtml(str) {
+      return String(str ?? "")
+        .replace(/&/g, "\u0026amp;")
+        .replace(/</g, "\u0026lt;")
+        .replace(/>/g, "\u0026gt;")
+        .replace(/"/g, "\u0026quot;")
+        .replace(/'/g, "\u0026#39;");
+    }
+
+    function safeJsArg(str) {
+      return String(str ?? "").replace(/\\/g, "\\\\").replace(/'/g, "\\'");
+    }
+
+    function showToast(msg, isError = false) {
+      const el = document.getElementById("toastBanner");
+      el.textContent = msg;
+      el.style.background = isError ? "rgba(185, 28, 28, 0.25)" : "rgba(76, 224, 228, 0.18)";
+      el.style.borderColor = isError ? "#ef4444" : "var(--primary-cyan)";
+      el.classList.remove("hidden");
+      clearTimeout(window._toastTimer);
+      window._toastTimer = setTimeout(() => el.classList.add("hidden"), 4500);
+    }
+
+    function setAuthMsg(msg, isError = false) {
+      const el = document.getElementById("authStatusMsg");
+      el.textContent = msg;
+      el.className = isError ? "text-center text-xs font-mono text-red-400" : "text-center text-xs font-mono text-emerald-400";
+    }
+
+    function switchAuthTab(tab) {
+      for (const t of ["login", "signup", "reset"]) {
+        document.getElementById(`form${t.charAt(0).toUpperCase() + t.slice(1)}`).classList.toggle("hidden", t !== tab);
+        const btn = document.getElementById(`authTab_${t}`);
+        if (t === tab) {
+          btn.style.background = "var(--primary-pink)";
+          btn.style.color = "#fff";
+          btn.classList.remove("opacity-75");
+        } else {
+          btn.style.background = "transparent";
+          btn.style.color = "inherit";
+          btn.classList.add("opacity-75");
+        }
+      }
+      setAuthMsg("");
+    }
+
+    function isUserBandOrAdmin() {
+      return Boolean(CURRENT_PROFILE && (CURRENT_PROFILE.is_band_member || CURRENT_PROFILE.is_admin));
+    }
+
+    async function signInWithProvider(provider) {
+      setAuthMsg(`Redirecting to ${provider}...`);
+      const redirectTo = window.location.origin + window.location.pathname;
+      const { error } = await sb.auth.signInWithOAuth({ provider, options: { redirectTo } });
+      if (error) setAuthMsg(error.message, true);
+    }
+
+    async function handleEmailLogin(e) {
+      e.preventDefault();
+      setAuthMsg("Signing in...");
+      const email = document.getElementById("loginEmail").value.trim();
+      const password = document.getElementById("loginPassword").value;
+      const { error } = await sb.auth.signInWithPassword({ email, password });
+      if (error) setAuthMsg(error.message, true);
+    }
+
+    async function handleEmailSignup(e) {
+      e.preventDefault();
+      const first_name = document.getElementById("signupFirst").value.trim();
+      const last_name = document.getElementById("signupLast").value.trim();
+      const performer_name = document.getElementById("signupPerformer").value.trim();
+      const email = document.getElementById("signupEmail").value.trim();
+      const password = document.getElementById("signupPassword").value;
+
+      if (!performer_name) return setAuthMsg("Performer Name is required.", true);
+      setAuthMsg("Creating your TooginTV account...");
+
+      const redirectTo = window.location.origin + window.location.pathname;
+      const { data, error } = await sb.auth.signUp({
+        email,
+        password,
+        options: { emailRedirectTo: redirectTo, data: { first_name, last_name, performer_name } }
+      });
+
+      if (error) return setAuthMsg(error.message, true);
+
+      if (data?.user && data?.session) {
+        await sb.from("toogin_profiles").upsert({
+          id: data.user.id, email, first_name, last_name, performer_name
+        }, { onConflict: "id" });
+        setAuthMsg("Account created! Signing you in...");
+      } else {
+        setAuthMsg("Check your email inbox to confirm your account!");
+      }
+    }
+
+    async function handlePasswordResetRequest(e) {
+      e.preventDefault();
+      const email = document.getElementById("resetEmail").value.trim();
+      setAuthMsg("Sending password reset link...");
+      const redirectTo = window.location.origin + window.location.pathname;
+      const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo });
+      if (error) return setAuthMsg(error.message, true);
+      setAuthMsg("Password reset link sent! Check your email inbox.");
+    }
+
+    async function submitNewPassword(e) {
+      e.preventDefault();
+      const p1 = document.getElementById("newRecoveryPassword").value;
+      const p2 = document.getElementById("confirmRecoveryPassword").value;
+      const errEl = document.getElementById("recoveryError");
+
+      if (!p1 || p1.length < 6) {
+        errEl.textContent = "Password must be at least 6 characters.";
+        return;
+      }
+      if (p1 !== p2) {
+        errEl.textContent = "Passwords do not match.";
+        return;
+      }
+
+      errEl.textContent = "Updating password...";
+      const { error } = await sb.auth.updateUser({ password: p1 });
+      if (error) {
+        errEl.textContent = error.message;
+        return;
+      }
+
+      document.getElementById("recoveryModal").classList.add("hidden");
+      showToast("Your password has been updated ✓");
+    }
+
+    async function handleSignOut() {
+      await sb.auth.signOut();
+      CURRENT_USER = null;
+      CURRENT_PROFILE = null;
+      updateAuthUI();
+    }
+
+    async function ensureUserProfile(user) {
+      const { data } = await sb.from("toogin_profiles").select("*").eq("id", user.id).maybeSingle();
+      if (data) {
+        CURRENT_PROFILE = data;
+        return;
+      }
+      const meta = user.user_metadata || {};
+      const fullName = meta.full_name || meta.name || "";
+      const parts = fullName.split(" ");
+      const first_name = meta.first_name || parts[0] || "";
+      const last_name = meta.last_name || parts.slice(1).join(" ") || "";
+      const fallbackName = meta.performer_name || first_name || (user.email ? user.email.split("@")[0] : "Performer");
+
+      const newProf = { id: user.id, email: user.email || "", first_name, last_name, performer_name: fallbackName };
+      const { data: inserted } = await sb.from("toogin_profiles").upsert(newProf, { onConflict: "id" }).select("*").maybeSingle();
+      CURRENT_PROFILE = inserted || newProf;
+    }
+
+    function openProfileModal() {
+      if (!CURRENT_PROFILE) return;
+      document.getElementById("editPerformerName").value = CURRENT_PROFILE.performer_name || "";
+      document.getElementById("editFirstName").value = CURRENT_PROFILE.first_name || "";
+      document.getElementById("editLastName").value = CURRENT_PROFILE.last_name || "";
+      document.getElementById("profileModal").classList.remove("hidden");
+    }
+
+    function closeProfileModal() {
+      document.getElementById("profileModal").classList.add("hidden");
+    }
+
+    async function saveProfileChanges() {
+      const perf = document.getElementById("editPerformerName").value.trim();
+      const first = document.getElementById("editFirstName").value.trim();
+      const last = document.getElementById("editLastName").value.trim();
+      if (!perf || !CURRENT_USER) return showToast("Performer Name cannot be empty.", true);
+
+      const oldName = CURRENT_PROFILE ? CURRENT_PROFILE.performer_name : null;
+
+      const { error } = await sb.from("toogin_profiles").update({
+        performer_name: perf, first_name: first, last_name: last
+      }).eq("id", CURRENT_USER.id);
+
+      if (error) return showToast("Profile update failed: " + error.message, true);
+
+      await sb.from("toogin_veto_votes").update({ performer_name: perf }).eq("user_id", CURRENT_USER.id);
+      if (oldName && oldName !== perf) {
+        await sb.from("toogin_veto_votes").update({ performer_name: perf }).eq("performer_name", oldName);
+      }
+
+      CURRENT_PROFILE.performer_name = perf;
+      CURRENT_PROFILE.first_name = first;
+      CURRENT_PROFILE.last_name = last;
+      closeProfileModal();
+      updateAuthUI();
+      showToast("Profile & veto tags updated ✓");
+      await loadVotingData();
+    }
+
+    function updateAuthUI() {
+      const loggedIn = Boolean(CURRENT_USER && CURRENT_PROFILE);
+      document.getElementById("authSection").classList.toggle("hidden", loggedIn);
+      document.getElementById("votingAppSection").classList.toggle("hidden", !loggedIn);
+      document.getElementById("headerUserBar").classList.toggle("hidden", !loggedIn);
+
+      if (!loggedIn) return;
+
+      const perfName = CURRENT_PROFILE.performer_name || "Performer";
+      document.getElementById("navPerformerName").textContent = perfName;
+      document.getElementById("noticePerformerName").textContent = perfName;
+
+      const badge = document.getElementById("roleBadge");
+      const nonBandBanner = document.getElementById("nonBandNotice");
+
+      if (isUserBandOrAdmin()) {
+        badge.textContent = "🎸 Band Member";
+        nonBandBanner.classList.add("hidden");
+      } else {
+        badge.textContent = "🎤 Karaoke Singer (View Only)";
+        nonBandBanner.classList.remove("hidden");
+      }
+    }
+
+    async function refreshProfileAndPool() {
+      if (!CURRENT_USER) return;
+      await ensureUserProfile(CURRENT_USER);
+      updateAuthUI();
+      await loadVotingData();
+    }
+
+    async function loadVotingData() {
+      if (!CURRENT_USER) return;
+      const [poolRes, vetoRes] = await Promise.all([
+        sb.from("toogin_voting_pool").select("*").order("song_name"),
+        sb.from("toogin_veto_votes").select("*").order("created_at")
+      ]);
+      if (poolRes.error) showToast("Pool load error: " + poolRes.error.message, true);
+      if (vetoRes.error) showToast("Veto load error: " + vetoRes.error.message, true);
+
+      POOL_SONGS = poolRes.data || [];
+      VETO_VOTES = vetoRes.data || [];
+      renderPool();
+    }
+
+    function setFilter(f) {
+      CURRENT_FILTER = f;
+      renderPool();
+    }
+
+    function getVetoesForSong(songId) {
+      return VETO_VOTES.filter(v => Number(v.song_id) === Number(songId));
+    }
+
+    function hasUserVetoed(vetoes) {
+      if (!CURRENT_USER || !CURRENT_PROFILE) return false;
+      const myPerf = (CURRENT_PROFILE.performer_name || "").trim().toLowerCase();
+      return vetoes.some(v =>
+        (v.user_id && String(v.user_id) === String(CURRENT_USER.id)) ||
+        (myPerf && String(v.performer_name || "").trim().toLowerCase() === myPerf)
+      );
+    }
+
+    async function toggleMyVeto(songId) {
+      if (!isUserBandOrAdmin()) {
+        return showToast("Only promoted Band Members can cast vetoes!", true);
+      }
+
+      const vetoes = getVetoesForSong(songId);
+      const myPerf = (CURRENT_PROFILE.performer_name || "").trim().toLowerCase();
+      const myExistingList = vetoes.filter(v =>
+        (v.user_id && String(v.user_id) === String(CURRENT_USER.id)) ||
+        (myPerf && String(v.performer_name || "").trim().toLowerCase() === myPerf)
+      );
+
+      if (myExistingList.length > 0) {
+        for (const v of myExistingList) {
+          const { error } = await sb.from("toogin_veto_votes").delete().eq("id", v.id);
+          if (error) return showToast("Could not remove veto: " + error.message, true);
+        }
+      } else {
+        const performerName = (CURRENT_PROFILE.performer_name || CURRENT_USER.email || "Band Member").trim();
+        const { error } = await sb.from("toogin_veto_votes").upsert({
+          song_id: Number(songId),
+          user_id: CURRENT_USER.id,
+          performer_name: performerName
+        }, { onConflict: "song_id,performer_name" });
+        if (error) return showToast("Could not cast veto: " + error.message, true);
+      }
+
+      await loadVotingData();
+    }
+
+    function openChartLightbox(url, title) {
+      document.getElementById("lightboxImg").src = url;
+      document.getElementById("lightboxRawLink").href = url;
+      document.getElementById("lightboxTitle").textContent = title;
+      document.getElementById("chartLightbox").classList.remove("hidden");
+    }
+
+    function closeChartLightbox() {
+      document.getElementById("chartLightbox").classList.add("hidden");
+    }
+
+    function renderPool() {
+      let safeCount = 0, warnCount = 0, pulledCount = 0, myVetoCount = 0;
+
+      for (const s of POOL_SONGS) {
+        const vetoes = getVetoesForSong(s.song_id);
+        if (vetoes.length === 0) safeCount++;
+        else if (vetoes.length === 1) warnCount++;
+        else pulledCount++;
+        if (hasUserVetoed(vetoes)) myVetoCount++;
+      }
+
+      document.getElementById("statTotal").textContent = POOL_SONGS.length;
+      document.getElementById("statSafe").textContent = safeCount;
+      document.getElementById("statWarn").textContent = warnCount;
+      document.getElementById("statPulled").textContent = pulledCount;
+      document.getElementById("statMine").textContent = myVetoCount;
+
+      for (const f of ["all", "safe", "warn", "pulled", "mine"]) {
+        const btn = document.getElementById(`fBtn_${f}`);
+        if (!btn) continue;
+        btn.style.borderColor = f === CURRENT_FILTER ? "var(--primary-pink)" : "var(--border-color)";
+      }
+
+      const q = document.getElementById("searchInput").value.toLowerCase().trim();
+      const canVeto = isUserBandOrAdmin();
+
+      const filtered = POOL_SONGS.filter(s => {
+        const vetoes = getVetoesForSong(s.song_id);
+        const c = vetoes.length;
+        if (CURRENT_FILTER === "safe" && c !== 0) return false;
+        if (CURRENT_FILTER === "warn" && c !== 1) return false;
+        if (CURRENT_FILTER === "pulled" && c < 2) return false;
+        if (CURRENT_FILTER === "mine" && !hasUserVetoed(vetoes)) return false;
+
+        if (q) {
+          const vetoNames = vetoes.map(v => String(v.performer_name || "").toLowerCase()).join(" ");
+          const hay = `${s.song_name || ""} ${s.artist || ""} ${s.toogin_preferred_key || ""} ${s.tuning_offset || ""} ${vetoNames}`.toLowerCase();
+          if (!hay.includes(q)) return false;
+        }
+        return true;
+      });
+
+      const listEl = document.getElementById("songsList");
+      if (!filtered.length) {
+        listEl.innerHTML = `<div class="toogin-panel p-12 text-center opacity-70 text-sm">No songs match this filter.</div>`;
+        return;
+      }
+
+      listEl.innerHTML = filtered.map(s => {
+        const sid = Number(s.song_id);
+        const vetoes = getVetoesForSong(sid);
+        const vCount = vetoes.length;
+        const iVetoed = hasUserVetoed(vetoes);
+
+        let statusPill = `<span class="px-2.5 py-0.5 rounded-full text-[11px] font-mono bg-emerald-950 text-emerald-300 border border-emerald-500/40">✅ 0/2 IN SHOW</span>`;
+        if (vCount === 1) {
+          statusPill = `<span class="px-2.5 py-0.5 rounded-full text-[11px] font-mono bg-amber-950 text-amber-300 border border-amber-500/40">⚠️ 1/2 (1 MORE PULLS IT)</span>`;
+        } else if (vCount >= 2) {
+          statusPill = `<span class="px-2.5 py-0.5 rounded-full text-[11px] font-mono bg-red-950 text-red-300 border border-red-500/40">🚫 ${vCount}/2 PULLED FROM SHOW</span>`;
+        }
+
+        const vetoChips = vetoes.length
+          ? vetoes.map(v => `
+              <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-red-950/90 text-red-200 border border-red-500/50">
+                🚫 ${safeHtml(v.performer_name)}
+              </span>
+            `).join("")
+          : `<span class="text-xs opacity-60 italic">No vetoes yet — clear to play</span>`;
+
+        const chartButtons = `
+          ${s.guitar_chart_url ? `<button onclick="openChartLightbox('${safeJsArg(s.guitar_chart_url)}', '${safeJsArg(s.song_name)} — Guitar Chart')" class="btn-cyan py-0.5 px-2.5 text-[11px]">🎸 Guitar Chart</button>` : ""}
+          ${s.bass_chart_url ? `<button onclick="openChartLightbox('${safeJsArg(s.bass_chart_url)}', '${safeJsArg(s.song_name)} — Bass Chart')" class="btn-cyan py-0.5 px-2.5 text-[11px]">🎸 Bass Chart</button>` : ""}
+        `;
+
+        let actionBtnHtml = "";
+        if (canVeto) {
+          let actionBtnLabel = "🚫 Veto This Song";
+          let btnCls = "btn-pink";
+          if (iVetoed) {
+            actionBtnLabel = "↩ Undo My Veto";
+            btnCls = "btn-cyan";
+          } else if (vCount >= 2) {
+            actionBtnLabel = "➕ Pile On My Veto";
+            btnCls = "btn-pink";
+          }
+          actionBtnHtml = `<button onclick="toggleMyVeto(${sid})" class="${btnCls}">${actionBtnLabel}</button>`;
+        }
+
+        return `
+          <div class="toogin-panel p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div class="space-y-1.5">
+              <div class="flex flex-wrap items-center gap-2">
+                ${statusPill}
+                <span class="font-mono text-xs px-2.5 py-0.5 rounded font-bold" style="background: var(--subcard-bg); border: 1px solid var(--border-color);">
+                  Key: ${safeHtml(s.toogin_preferred_key || s.original_key || "?")} • ${safeHtml(s.tuning_offset || "Eb Standard (-1)")}
+                </span>
+                ${chartButtons}
+              </div>
+
+              <div>
+                <h3 class="text-base font-extrabold leading-snug" style="color: var(--primary-pink);">${safeHtml(s.song_name)}</h3>
+                <p class="text-xs font-bold opacity-80">${safeHtml(s.artist)}</p>
+              </div>
+
+              <div class="flex flex-wrap items-center gap-1.5 pt-1">
+                <span class="text-[11px] opacity-70 font-semibold mr-1">Vetoes:</span>
+                ${vetoChips}
+              </div>
+            </div>
+
+            <div class="flex sm:flex-col items-end justify-between gap-2 shrink-0">
+              ${actionBtnHtml}
+            </div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    sb.auth.onAuthStateChange(async (event, session) => {
+      if (event === "PASSWORD_RECOVERY") {
+        document.getElementById("recoveryModal").classList.remove("hidden");
+      }
+      if (session?.user) {
+        CURRENT_USER = session.user;
+        await ensureUserProfile(session.user);
+        updateAuthUI();
+        await loadVotingData();
+      } else {
+        CURRENT_USER = null;
+        CURRENT_PROFILE = null;
+        updateAuthUI();
+      }
+    });
+
+    sb.channel("toogin_live_vetoes")
+      .on("postgres_changes", { event: "*", schema: "public", table: "toogin_veto_votes" }, () => {
+        if (CURRENT_USER) loadVotingData();
+      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "toogin_voting_pool" }, () => {
+        if (CURRENT_USER) loadVotingData();
+      })
+      .subscribe();
+  </script>
+</body>
+</html>

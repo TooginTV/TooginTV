@@ -1,0 +1,1133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TooginTV — Karaoke Song List & Reservations</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Montserrat:wght@700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/styles.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    :root {
+      --primary-cyan: #4ce0e4;
+      --primary-pink: #eb74ab;
+      --pink-hover: #d15d92;
+      --bg-color: var(--primary-cyan);
+      --text-color: #222222;
+      --card-bg: #ffffff;
+      --card-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+      --border-color: rgba(0, 0, 0, 0.12);
+      --subcard-bg: #f4f8f9;
+    }
+    body.dark-mode {
+      --bg-color: #0d0d0d;
+      --text-color: #f5f5f5;
+      --card-bg: #1a1a1a;
+      --card-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+      --border-color: rgba(255, 255, 255, 0.12);
+      --subcard-bg: #111111;
+    }
+    body {
+      padding-bottom: 7rem;
+    }
+    .toogin-panel {
+      background-color: var(--card-bg);
+      color: var(--text-color);
+      border: 2px solid var(--border-color);
+      border-radius: 16px;
+      box-shadow: var(--card-shadow);
+    }
+    .toogin-subcard {
+      background-color: var(--subcard-bg);
+      color: var(--text-color);
+      border: 1.5px solid var(--border-color);
+      border-radius: 14px;
+    }
+    .toogin-input {
+      background-color: var(--subcard-bg);
+      color: var(--text-color);
+      border: 1.5px solid var(--border-color);
+      border-radius: 12px;
+      padding: 0.6rem 0.9rem;
+    }
+    .toogin-input:focus {
+      outline: none;
+      border-color: var(--primary-pink);
+    }
+    .btn-cyan {
+      background-color: var(--primary-cyan);
+      color: #111111;
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 800;
+      border-radius: 50px;
+      padding: 0.55rem 1.15rem;
+      text-transform: uppercase;
+      font-size: 0.78rem;
+      letter-spacing: 0.4px;
+      transition: all 0.2s ease;
+    }
+    .btn-cyan:hover {
+      filter: brightness(0.92);
+      transform: translateY(-1px);
+    }
+    .btn-pink {
+      background-color: var(--primary-pink);
+      color: #ffffff;
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 800;
+      border-radius: 50px;
+      padding: 0.55rem 1.2rem;
+      text-transform: uppercase;
+      font-size: 0.78rem;
+      letter-spacing: 0.4px;
+      transition: all 0.2s ease;
+      box-shadow: 0 4px 10px rgba(235, 116, 171, 0.3);
+    }
+    .btn-pink:hover:not(:disabled) {
+      background-color: var(--pink-hover);
+      transform: translateY(-1px);
+    }
+    .btn-pink:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+  </style>
+</head>
+<body class="dark-mode">
+
+  <!-- HEADER WITH RESTRICTED KARAOKE NAVIGATION -->
+  <header style="margin-bottom: 1rem; padding: 1.5rem 0 1rem 0;">
+    <a href="index.html">
+      <img src="../black and pink.png" onerror="this.onerror=null;this.src='TooginLogo.jpg';" alt="TooginTV Logo" class="logo-img" style="max-width: 200px;" />
+    </a>
+
+    <nav class="header-controls">
+      <a href="index.html" class="btn btn-outline">← Event Info</a>
+      <a href="queue.html" class="btn">📋 Live Queue (<span id="navQueueCount">0</span>)</a>
+
+      <!-- Band Member / Admin Only Controls -->
+      <a href="voting.html" id="navVotingLink" class="btn btn-outline hidden" style="border-color: var(--primary-cyan);">
+        🗳️ Band Veto
+      </a>
+      <button id="viewAsSingerBtn" type="button" onclick="toggleViewAsSinger()" class="btn btn-outline hidden" style="border-color: var(--primary-cyan);">
+        👁️ View as Singer: OFF
+      </button>
+
+      <button class="btn btn-outline" id="themeToggle" type="button">🌓 Theme</button>
+    </nav>
+
+    <!-- Logged-In User Bar / Auth Trigger -->
+    <div class=" flex flex-wrap items-center justify-center gap-2 text-xs mt-1">
+      <div id="userStatusBar" class="hidden flex flex-wrap items-center gap-2">
+        <span id="roleBadge" class="px-3 py-1 rounded-full font-bold uppercase tracking-wider text-[11px]" style="background: rgba(76,224,228,0.15); border: 1px solid var(--primary-cyan); color: var(--primary-cyan);"></span>
+        <button onclick="openProfileModal()" class="px-3 py-1 rounded-full font-bold text-xs" style="background: rgba(235,116,171,0.18); border: 1px solid var(--primary-pink);">
+          ✎ <span id="navPerformerName">Performer</span>
+        </button>
+        <button onclick="handleSignOut()" class="px-3 py-1 rounded-full text-xs opacity-75 hover:opacity-100" style="border: 1px solid var(--border-color);">
+          Sign Out
+        </button>
+      </div>
+      <button id="openAuthBtn" onclick="toggleAuthDrawer()" class="btn-cyan text-xs">
+        🔑 Sign In / Create Singer Account
+      </button>
+    </div>
+  </header>
+
+  <main style="max-width: 1100px; gap: 1.25rem;">
+
+    <!-- NON-BLOCKING TOAST -->
+    <div id="toastBanner" class="hidden rounded-xl px-4 py-3 text-xs font-bold border text-center"></div>
+
+    <!-- ================================================================== -->
+    <!-- COLLAPSIBLE AUTHENTICATION DRAWER (SHARED TOOGIN AUTH)             -->
+    <!-- ================================================================== -->
+    <section id="authSection" class="toogin-panel p-6 max-w-md mx-auto w-full hidden space-y-4">
+      <div class="flex items-center justify-between">
+        <div>
+          <h2 class="text-lg font-extrabold" style="color: var(--primary-pink); margin-bottom: 0;">🎤 Singer &amp; Band Sign-In</h2>
+          <p class="text-xs opacity-80">Sign in once to reserve up to 3 songs in the live queue.</p>
+        </div>
+        <button onclick="toggleAuthDrawer(false)" class="text-sm font-bold opacity-70 hover:opacity-100">✕</button>
+      </div>
+
+      <div class="grid grid-cols-2 gap-2.5 text-xs">
+        <button onclick="signInWithProvider('google')" type="button"
+          class="flex items-center justify-center gap-2 bg-white hover:bg-zinc-200 text-zinc-900 font-bold py-2.5 px-3 rounded-xl border border-zinc-300 transition">
+          <span>G</span> Google SSO
+        </button>
+        <button onclick="signInWithProvider('facebook')" type="button"
+          class="flex items-center justify-center gap-2 bg-[#1877F2] hover:bg-[#166fe5] text-white font-bold py-2.5 px-3 rounded-xl transition">
+          <span>f</span> Facebook SSO
+        </button>
+      </div>
+
+      <div class="grid grid-cols-3 gap-1 p-1 rounded-xl text-xs" style="background: var(--subcard-bg);">
+        <button id="authTab_login" type="button" onclick="switchAuthTab('login')" class="py-1.5 rounded-lg font-bold" style="background: var(--primary-pink); color: #fff;">Sign In</button>
+        <button id="authTab_signup" type="button" onclick="switchAuthTab('signup')" class="py-1.5 rounded-lg font-bold opacity-75">Create Account</button>
+        <button id="authTab_reset" type="button" onclick="switchAuthTab('reset')" class="py-1.5 rounded-lg font-bold opacity-75">Reset Pass</button>
+      </div>
+
+      <form id="formLogin" onsubmit="handleEmailLogin(event)" class="space-y-3 text-xs">
+        <input id="loginEmail" type="email" required placeholder="Email address" class="toogin-input w-full" />
+        <input id="loginPassword" type="password" required placeholder="Password" class="toogin-input w-full" />
+        <button type="submit" class="btn-pink w-full py-2.5">Sign In</button>
+      </form>
+
+      <form id="formSignup" onsubmit="handleEmailSignup(event)" class="hidden space-y-3 text-xs">
+        <div class="grid grid-cols-2 gap-2">
+          <input id="signupFirst" type="text" required placeholder="First Name *" class="toogin-input w-full" />
+          <input id="signupLast" type="text" required placeholder="Last Name *" class="toogin-input w-full" />
+        </div>
+        <input id="signupPerformer" type="text" required placeholder="Stage / Singer Name * (Called out by host)" class="toogin-input w-full font-bold" style="border-color: var(--primary-pink);" />
+        <input id="signupEmail" type="email" required placeholder="Email address *" class="toogin-input w-full" />
+        <input id="signupPassword" type="password" required minlength="6" placeholder="Password (min 6 chars) *" class="toogin-input w-full" />
+        <button type="submit" class="btn-cyan w-full py-2.5">Create Singer Account</button>
+      </form>
+
+      <form id="formReset" onsubmit="handlePasswordResetRequest(event)" class="hidden space-y-3 text-xs">
+        <p class="opacity-80">Enter your account email and we will send you a password reset link.</p>
+        <input id="resetEmail" type="email" required placeholder="Your email address" class="toogin-input w-full" />
+        <button type="submit" class="btn-pink w-full py-2.5">Send Reset Link</button>
+      </form>
+
+      <div id="authStatusMsg" class="text-center text-xs font-mono"></div>
+    </section>
+
+    <!-- ================================================================== -->
+    <!-- SINGER ACTIVE RESERVATIONS BAR (MAX 3 SONGS)                       -->
+    <!-- ================================================================== -->
+    <section id="myReservationsBox" class="toogin-panel p-4 hidden space-y-2.5">
+      <div class="flex flex-wrap items-center justify-between gap-2">
+        <div class="flex items-center gap-2">
+          <span class="text-base font-extrabold brand-font" style="color: var(--primary-pink);">
+            🎤 My Song Reservations (<span id="myResCount">0</span> / 3 Max)
+          </span>
+        </div>
+        <a href="queue.html" class="text-xs font-bold underline" style="color: var(--primary-cyan);">View Full Live Queue →</a>
+      </div>
+      <div id="myReservationsList" class="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs"></div>
+    </section>
+
+    <!-- ================================================================== -->
+    <!-- SEARCH & FILTER CONTROLS                                           -->
+    <!-- ================================================================== -->
+    <section class="toogin-panel p-4 space-y-3">
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <input id="searchInput" type="text" placeholder="Search by song title, artist, or original key..."
+          oninput="renderSongs()" class="toogin-input flex-1 min-w-[240px] text-sm" />
+
+        <div class="flex flex-wrap items-center gap-1.5 text-xs">
+          <button type="button" onclick="setSongFilter('all')" id="sf_all" class="btn-pink">All Songs (<span id="countAll">0</span>)</button>
+          <button type="button" onclick="setSongFilter('available')" id="sf_available" class="btn-cyan">Available (<span id="countAvail">0</span>)</button>
+          <button type="button" onclick="setSongFilter('queued')" id="sf_queued" class="btn-cyan">In Queue (<span id="countQueued">0</span>)</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================================================================== -->
+    <!-- SONG CARDS GRID                                                    -->
+    <!-- ================================================================== -->
+    <section id="songsGrid" class="grid grid-cols-1 md:grid-cols-2 gap-3.5"></section>
+
+  </main>
+
+  <!-- ==================================================================== -->
+  <!-- BAND MEMBER DETAILED SONG & TRANSPOSABLE CHART MODAL                 -->
+  <!-- ==================================================================== -->
+  <div id="bandChartModal" class="hidden fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5" onclick="closeBandModal()">
+    <div class="toogin-panel max-w-4xl w-full max-h-[92vh] overflow-y-auto p-5 space-y-4 text-xs" onclick="event.stopPropagation()">
+      <!-- Modal Header -->
+      <div class="flex flex-wrap items-start justify-between gap-3 border-b pb-3" style="border-color: var(--border-color);">
+        <div>
+          <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider" style="background: rgba(76,224,228,0.18); color: var(--primary-cyan); border: 1px solid var(--primary-cyan);">
+            🎸 Band Member Inspection &amp; Live Chart Transposer
+          </span>
+          <h2 id="bmTitle" class="text-xl font-extrabold mt-1" style="color: var(--primary-pink); margin-bottom: 0;">Song Title</h2>
+          <p id="bmArtist" class="text-sm font-bold opacity-85">Artist</p>
+        </div>
+        <button type="button" onclick="closeBandModal()" class="btn-pink px-3.5 py-1.5">Close ✕</button>
+      </div>
+
+      <!-- Detailed Metadata Grid -->
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+        <div class="toogin-subcard p-2.5">
+          <div class="text-[10px] uppercase font-bold opacity-65">Original Key</div>
+          <div id="bmOrigKey" class="text-sm font-extrabold font-mono mt-0.5">—</div>
+        </div>
+        <div class="toogin-subcard p-2.5">
+          <div class="text-[10px] uppercase font-bold opacity-65">Toogin Preferred Key</div>
+          <div id="bmPrefKey" class="text-sm font-extrabold font-mono mt-0.5" style="color: var(--primary-cyan);">—</div>
+        </div>
+        <div class="toogin-subcard p-2.5">
+          <div class="text-[10px] uppercase font-bold opacity-65">Guitar / Bass Tuning</div>
+          <div id="bmTuning" class="text-sm font-extrabold font-mono mt-0.5" style="color: var(--primary-pink);">—</div>
+        </div>
+        <div class="toogin-subcard p-2.5">
+          <div class="text-[10px] uppercase font-bold opacity-65">Surviving Vetoes</div>
+          <div id="bmVetoes" class="text-xs font-bold mt-0.5">—</div>
+        </div>
+      </div>
+
+      <!-- Interactive Key Transposer & Instrument Selector -->
+      <div class="toogin-subcard p-3.5 flex flex-wrap items-center justify-between gap-3">
+        <div class="flex flex-wrap items-center gap-1.5">
+          <button type="button" id="bmTab_guitar_text" onclick="setBandModalTab('guitar_text')" class="btn-pink">🎸 Guitar Chart (Text)</button>
+          <button type="button" id="bmTab_bass_text" onclick="setBandModalTab('bass_text')" class="btn-cyan">🎸 Bass Chart (Text)</button>
+          <button type="button" id="bmTab_guitar_img" onclick="setBandModalTab('guitar_img')" class="btn-cyan">📷 Guitar Scan Photo</button>
+          <button type="button" id="bmTab_bass_img" onclick="setBandModalTab('bass_img')" class="btn-cyan">📷 Bass Scan Photo</button>
+        </div>
+
+        <!-- Live Key Transpose Controls -->
+        <div id="bmTransposeControls" class="flex flex-wrap items-center gap-2">
+          <span class="font-bold text-[11px] uppercase opacity-80">Adjust Chart Key:</span>
+          <button type="button" onclick="shiftModalSemitones(-1)" class="px-2.5 py-1 rounded-lg font-mono font-bold border" style="border-color: var(--border-color);">-1 Semi</button>
+          <span id="bmSemitoneBadge" class="font-mono font-extrabold px-2 py-0.5 rounded text-xs" style="background: rgba(235,116,171,0.2); color: var(--primary-pink);">0 Semi</span>
+          <button type="button" onclick="shiftModalSemitones(1)" class="px-2.5 py-1 rounded-lg font-mono font-bold border" style="border-color: var(--border-color);">+1 Semi</button>
+
+          <select id="bmTargetKeySelect" onchange="jumpModalToTargetKey(this.value)" class="toogin-input py-1 px-2 text-xs font-mono font-bold">
+            <option value="">Jump to Key...</option>
+            <option value="C">C / Cm</option>
+            <option value="C#">C# / C#m</option>
+            <option value="D">D / Dm</option>
+            <option value="Eb">Eb / Ebm</option>
+            <option value="E">E / Em</option>
+            <option value="F">F / Fm</option>
+            <option value="F#">F# / F#m</option>
+            <option value="G">G / Gm</option>
+            <option value="Ab">Ab / Abm</option>
+            <option value="A">A / Am</option>
+            <option value="Bb">Bb / Bbm</option>
+            <option value="B">B / Bm</option>
+          </select>
+          <button type="button" onclick="resetModalSemitones()" class="px-2 py-1 rounded-lg text-[11px] opacity-75 hover:opacity-100 border" style="border-color: var(--border-color);">Reset</button>
+        </div>
+      </div>
+
+      <!-- Chart Content Display Area -->
+      <div id="bmChartViewport" class="toogin-subcard p-4 min-h-[260px]"></div>
+    </div>
+  </div>
+
+  <!-- ==================================================================== -->
+  <!-- EDIT PERFORMER PROFILE MODAL                                         -->
+  <!-- ==================================================================== -->
+  <div id="profileModal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="toogin-panel max-w-md w-full p-6 space-y-4 text-xs">
+      <div class="flex items-center justify-between">
+        <h3 class="text-base font-bold" style="color: var(--primary-pink);">🎤 Edit Singer / Stage Profile</h3>
+        <button onclick="closeProfileModal()" class="text-sm font-bold">✕</button>
+      </div>
+      <div>
+        <label class="block font-bold mb-1">Stage / Performer Name *</label>
+        <input id="editPerformerName" type="text" class="toogin-input w-full font-bold" />
+      </div>
+      <div class="grid grid-cols-2 gap-2">
+        <div>
+          <label class="block opacity-75 mb-1">First Name</label>
+          <input id="editFirstName" type="text" class="toogin-input w-full" />
+        </div>
+        <div>
+          <label class="block opacity-75 mb-1">Last Name</label>
+          <input id="editLastName" type="text" class="toogin-input w-full" />
+        </div>
+      </div>
+      <div class="flex justify-end gap-2 pt-2">
+        <button onclick="closeProfileModal()" class="btn-cyan">Cancel</button>
+        <button onclick="saveProfileChanges()" class="btn-pink">Save Profile</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================================================================== -->
+  <!-- PASSWORD RECOVERY MODAL                                              -->
+  <!-- ==================================================================== -->
+  <div id="recoveryModal" class="hidden fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4">
+    <form onsubmit="submitNewPassword(event)" class="toogin-panel max-w-md w-full p-6 space-y-4 text-xs">
+      <h3 class="text-base font-bold" style="color: var(--primary-pink);">🔑 Set Your New Password</h3>
+      <input id="newRecoveryPassword" type="password" required minlength="6" placeholder="New password (min 6 chars)" class="toogin-input w-full" />
+      <input id="confirmRecoveryPassword" type="password" required minlength="6" placeholder="Confirm new password" class="toogin-input w-full" />
+      <div id="recoveryError" class="text-red-400 font-mono"></div>
+      <div class="flex justify-end gap-2">
+        <button type="button" onclick="document.getElementById('recoveryModal').classList.add('hidden')" class="btn-cyan">Cancel</button>
+        <button type="submit" class="btn-pink">Update Password</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- ==================================================================== -->
+  <!-- STICKY BOTTOM SPOTIFY PLAYER BAR                                     -->
+  <!-- ==================================================================== -->
+  <div id="spotifyBar" class="hidden fixed bottom-0 inset-x-0 z-40 p-2 border-t-2" style="background: var(--card-bg); border-color: var(--primary-pink);">
+    <div class="max-w-5xl mx-auto flex items-center justify-between gap-3">
+      <iframe id="spotifyIframe" class="w-full h-20 rounded-xl" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>
+      <div class="flex flex-col gap-1 shrink-0">
+        <a id="spotifyAppLink" href="#" target="_blank" rel="noopener" class="btn-pink text-[11px] px-3 py-1.5 text-center">Open in Spotify ↗</a>
+        <button type="button" onclick="document.getElementById('spotifyBar').classList.add('hidden')" class="btn-cyan text-[11px] px-3 py-1">Hide Player</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ========================================================================
+    // THEME INITIALIZATION (MATCHES TOOGINTV MAIN.JS)
+    // ========================================================================
+    (function initTheme() {
+      const saved = localStorage.getItem("toogintv-theme");
+      if (saved === "light") {
+        document.body.classList.remove("dark-mode");
+      } else {
+        document.body.classList.add("dark-mode");
+      }
+      const btn = document.getElementById("themeToggle");
+      if (btn) {
+        btn.addEventListener("click", () => {
+          document.body.classList.toggle("dark-mode");
+          const isDark = document.body.classList.contains("dark-mode");
+          localStorage.setItem("toogintv-theme", isDark ? "dark" : "light");
+        });
+      }
+    })();
+
+    // ========================================================================
+    // SUPABASE CLIENT & STATE
+    // ========================================================================
+    const SUPABASE_URL = "https://zupquximivdtynvpynlo.supabase.co";
+    const SUPABASE_KEY = "sb_publishable_ONCBPoG7aOOlejiaayIEDg_r6QiRP8F";
+    const MAX_SINGER_QUEUE = 3;
+
+    const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    let CURRENT_USER = null;
+    let CURRENT_PROFILE = null;
+    let VIEW_AS_SINGER = false;
+
+    let ACTIVE_SONGS = [];
+    let QUEUE_ITEMS = [];
+    let SONG_FILTER = "all"; // all | available | queued
+
+    // Band Modal State
+    let ACTIVE_MODAL_SONG = null;
+    let MODAL_TAB = "guitar_text"; // guitar_text | bass_text | guitar_img | bass_img
+    let MODAL_SEMITONE_SHIFT = 0;
+
+    const NOTES = ["C", "C#", "D", "Eb", "E", "F", "F#", "G", "Ab", "A", "Bb", "B"];
+    const NOTE_MAP = { c:0, "b#":0, "c#":1, db:1, d:2, "d#":3, eb:3, e:4, fb:4, f:5, "e#":5, "f#":6, gb:6, g:7, "g#":8, ab:8, a:9, "a#":10, bb:10, b:11, cb:11 };
+
+    function safeHtml(str) {
+      return String(str ?? "")
+        .replace(/&/g, "\u0026amp;")
+        .replace(/</g, "\u0026lt;")
+        .replace(/>/g, "\u0026gt;")
+        .replace(/"/g, "\u0026quot;")
+        .replace(/'/g, "\u0026#39;");
+    }
+
+    function safeJsArg(str) {
+      return String(str ?? "").replace(/\\/g, "\\\\").replace(/'/g, "\\'");
+    }
+
+    function showToast(msg, isError = false) {
+      const el = document.getElementById("toastBanner");
+      el.textContent = msg;
+      el.style.background = isError ? "rgba(185, 28, 28, 0.25)" : "rgba(76, 224, 228, 0.18)";
+      el.style.borderColor = isError ? "#ef4444" : "var(--primary-cyan)";
+      el.classList.remove("hidden");
+      clearTimeout(window._toastTimer);
+      window._toastTimer = setTimeout(() => el.classList.add("hidden"), 4500);
+    }
+
+    function isRealBandOrAdmin() {
+      return Boolean(CURRENT_PROFILE && (CURRENT_PROFILE.is_band_member || CURRENT_PROFILE.is_admin));
+    }
+
+    function isEffectiveBandView() {
+      return isRealBandOrAdmin() && !VIEW_AS_SINGER;
+    }
+
+    function toggleViewAsSinger() {
+      VIEW_AS_SINGER = !VIEW_AS_SINGER;
+      updateRoleAndAuthUI();
+      renderSongs();
+    }
+
+    // ========================================================================
+    // AUTHENTICATION & PROFILE MANAGEMENT
+    // ========================================================================
+    function toggleAuthDrawer(forceOpen) {
+      const el = document.getElementById("authSection");
+      const next = typeof forceOpen === "boolean" ? forceOpen : el.classList.contains("hidden");
+      el.classList.toggle("hidden", !next);
+      if (next) el.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+
+    function switchAuthTab(tab) {
+      for (const t of ["login", "signup", "reset"]) {
+        document.getElementById(`form${t.charAt(0).toUpperCase() + t.slice(1)}`).classList.toggle("hidden", t !== tab);
+        const btn = document.getElementById(`authTab_${t}`);
+        if (t === tab) {
+          btn.style.background = "var(--primary-pink)";
+          btn.style.color = "#fff";
+          btn.classList.remove("opacity-75");
+        } else {
+          btn.style.background = "transparent";
+          btn.style.color = "inherit";
+          btn.classList.add("opacity-75");
+        }
+      }
+      document.getElementById("authStatusMsg").textContent = "";
+    }
+
+    async function signInWithProvider(provider) {
+      const redirectTo = window.location.origin + window.location.pathname;
+      const { error } = await sb.auth.signInWithOAuth({ provider, options: { redirectTo } });
+      if (error) showToast(error.message, true);
+    }
+
+    async function handleEmailLogin(e) {
+      e.preventDefault();
+      const email = document.getElementById("loginEmail").value.trim();
+      const password = document.getElementById("loginPassword").value;
+      const { error } = await sb.auth.signInWithPassword({ email, password });
+      if (error) return showToast(error.message, true);
+      toggleAuthDrawer(false);
+      showToast("Signed in ✓");
+    }
+
+    async function handleEmailSignup(e) {
+      e.preventDefault();
+      const first_name = document.getElementById("signupFirst").value.trim();
+      const last_name = document.getElementById("signupLast").value.trim();
+      const performer_name = document.getElementById("signupPerformer").value.trim();
+      const email = document.getElementById("signupEmail").value.trim();
+      const password = document.getElementById("signupPassword").value;
+
+      const redirectTo = window.location.origin + window.location.pathname;
+      const { data, error } = await sb.auth.signUp({
+        email,
+        password,
+        options: { emailRedirectTo: redirectTo, data: { first_name, last_name, performer_name } }
+      });
+      if (error) return showToast(error.message, true);
+
+      if (data?.user && data?.session) {
+        await sb.from("toogin_profiles").upsert({
+          id: data.user.id, email, first_name, last_name, performer_name
+        }, { onConflict: "id" });
+        toggleAuthDrawer(false);
+        showToast("Welcome to TooginTV Karaoke ✓");
+      } else {
+        showToast("Check your email inbox to confirm your account!");
+      }
+    }
+
+    async function handlePasswordResetRequest(e) {
+      e.preventDefault();
+      const email = document.getElementById("resetEmail").value.trim();
+      const redirectTo = window.location.origin + window.location.pathname;
+      const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo });
+      if (error) return showToast(error.message, true);
+      showToast("Password reset link sent to your email!");
+    }
+
+    async function submitNewPassword(e) {
+      e.preventDefault();
+      const p1 = document.getElementById("newRecoveryPassword").value;
+      const p2 = document.getElementById("confirmRecoveryPassword").value;
+      const errEl = document.getElementById("recoveryError");
+      if (p1 !== p2) {
+        errEl.textContent = "Passwords do not match.";
+        return;
+      }
+      const { error } = await sb.auth.updateUser({ password: p1 });
+      if (error) {
+        errEl.textContent = error.message;
+        return;
+      }
+      document.getElementById("recoveryModal").classList.add("hidden");
+      showToast("Password updated ✓");
+    }
+
+    async function handleSignOut() {
+      await sb.auth.signOut();
+      CURRENT_USER = null;
+      CURRENT_PROFILE = null;
+      VIEW_AS_SINGER = false;
+      updateRoleAndAuthUI();
+      renderSongs();
+    }
+
+    async function ensureUserProfile(user) {
+      const { data } = await sb.from("toogin_profiles").select("*").eq("id", user.id).maybeSingle();
+      if (data) {
+        CURRENT_PROFILE = data;
+        return;
+      }
+      const meta = user.user_metadata || {};
+      const fullName = meta.full_name || meta.name || "";
+      const parts = fullName.split(" ");
+      const first_name = meta.first_name || parts[0] || "";
+      const last_name = meta.last_name || parts.slice(1).join(" ") || "";
+      const fallbackName = meta.performer_name || first_name || (user.email ? user.email.split("@")[0] : "Singer");
+      const newProf = { id: user.id, email: user.email || "", first_name, last_name, performer_name: fallbackName };
+      const { data: inserted } = await sb.from("toogin_profiles").upsert(newProf, { onConflict: "id" }).select("*").maybeSingle();
+      CURRENT_PROFILE = inserted || newProf;
+    }
+
+    function openProfileModal() {
+      if (!CURRENT_PROFILE) return;
+      document.getElementById("editPerformerName").value = CURRENT_PROFILE.performer_name || "";
+      document.getElementById("editFirstName").value = CURRENT_PROFILE.first_name || "";
+      document.getElementById("editLastName").value = CURRENT_PROFILE.last_name || "";
+      document.getElementById("profileModal").classList.remove("hidden");
+    }
+
+    function closeProfileModal() {
+      document.getElementById("profileModal").classList.add("hidden");
+    }
+
+    async function saveProfileChanges() {
+      const perf = document.getElementById("editPerformerName").value.trim();
+      const first = document.getElementById("editFirstName").value.trim();
+      const last = document.getElementById("editLastName").value.trim();
+      if (!perf || !CURRENT_USER) return showToast("Stage / Performer Name is required.", true);
+
+      const { error } = await sb.from("toogin_profiles").update({
+        performer_name: perf, first_name: first, last_name: last
+      }).eq("id", CURRENT_USER.id);
+      if (error) return showToast(error.message, true);
+
+      await sb.from("toogin_karaoke_queue").update({ performer_name: perf }).eq("user_id", CURRENT_USER.id);
+
+      CURRENT_PROFILE.performer_name = perf;
+      CURRENT_PROFILE.first_name = first;
+      CURRENT_PROFILE.last_name = last;
+      closeProfileModal();
+      updateRoleAndAuthUI();
+      await loadKaraokeData();
+      showToast("Profile updated ✓");
+    }
+
+    function updateRoleAndAuthUI() {
+      const loggedIn = Boolean(CURRENT_USER && CURRENT_PROFILE);
+      document.getElementById("userStatusBar").classList.toggle("hidden", !loggedIn);
+      document.getElementById("openAuthBtn").classList.toggle("hidden", loggedIn);
+      if (loggedIn) document.getElementById("authSection").classList.add("hidden");
+
+      const realBand = isRealBandOrAdmin();
+      const effectiveBand = isEffectiveBandView();
+
+      // Only show voting.html link if user is a band member/admin AND not in "View as Singer" mode
+      document.getElementById("navVotingLink").classList.toggle("hidden", !effectiveBand);
+
+      // Show "View as Singer" toggle button to all band members & admins
+      const vasBtn = document.getElementById("viewAsSingerBtn");
+      vasBtn.classList.toggle("hidden", !realBand);
+      if (realBand) {
+        vasBtn.textContent = VIEW_AS_SINGER ? "👁️ View as Singer: ON (Click for Band View)" : "👁️ View as Singer: OFF";
+        vasBtn.style.backgroundColor = VIEW_AS_SINGER ? "var(--primary-pink)" : "var(--card-bg)";
+        vasBtn.style.color = VIEW_AS_SINGER ? "#ffffff" : "var(--text-color)";
+      }
+
+      if (loggedIn) {
+        document.getElementById("navPerformerName").textContent = CURRENT_PROFILE.performer_name || "Singer";
+        document.getElementById("roleBadge").textContent = effectiveBand ? "🎸 Band Member View" : "🎤 Singer View";
+      }
+    }
+
+    // ========================================================================
+    // SPOTIFY HELPER
+    // ========================================================================
+    function extractSpotifyId(uriOrUrl) {
+      const s = String(uriOrUrl || "").trim();
+      if (!s) return "";
+      if (s.includes("spotify:track:")) return s.split("spotify:track:")[1].split("?")[0];
+      if (s.includes("open.spotify.com/track/")) return s.split("open.spotify.com/track/")[1].split("?")[0].split("/")[0];
+      if (/^[a-zA-Z0-9]{22}$/.test(s)) return s;
+      return "";
+    }
+
+    function playInSpotify(uriOrUrl, songName, artistName) {
+      const trackId = extractSpotifyId(uriOrUrl);
+      if (trackId) {
+        document.getElementById("spotifyBar").classList.remove("hidden");
+        document.getElementById("spotifyIframe").src = `https://open.spotify.com/embed/track/${trackId}?utm_source=generator&theme=0`;
+        document.getElementById("spotifyAppLink").href = `spotify:track:${trackId}`;
+      } else {
+        const query = encodeURIComponent(`${songName || ""} ${artistName || ""}`.trim());
+        window.open(`https://open.spotify.com/search/${query}`, "_blank", "noopener");
+      }
+    }
+
+    // ========================================================================
+    // DATA LOADING (ACTIVE KARAOKE + MASTER METADATA MERGE + QUEUE)
+    // ========================================================================
+    async function loadKaraokeData() {
+      const [activeRes, masterRes, queueRes] = await Promise.all([
+        sb.from("toogin_active_karaoke").select("*").order("song_name"),
+        sb.from("toogin_jams").select("id, spotify_uri, album, duration_display, original_key, toogin_preferred_key, tuning_offset, guitar_chart_url, bass_chart_url, guitar_chart_text, bass_chart_text"),
+        sb.from("toogin_karaoke_queue").select("*").order("created_at")
+      ]);
+
+      const masterMap = new Map((masterRes.data || []).map(m => [Number(m.id), m]));
+      const rawActive = activeRes.data || [];
+
+      ACTIVE_SONGS = rawActive.map(s => {
+        const m = masterMap.get(Number(s.song_id)) || {};
+        return {
+          ...m,
+          ...s,
+          spotify_uri: s.spotify_uri || m.spotify_uri || "",
+          original_key: s.original_key || m.original_key || "",
+          toogin_preferred_key: s.toogin_preferred_key || m.toogin_preferred_key || "",
+          tuning_offset: s.tuning_offset || m.tuning_offset || "Eb Standard (-1)",
+          guitar_chart_url: s.guitar_chart_url || m.guitar_chart_url || "",
+          bass_chart_url: s.bass_chart_url || m.bass_chart_url || "",
+          guitar_chart_text: s.guitar_chart_text || m.guitar_chart_text || "",
+          bass_chart_text: s.bass_chart_text || m.bass_chart_text || ""
+        };
+      });
+
+      QUEUE_ITEMS = queueRes.data || [];
+
+      const activeQueueCount = QUEUE_ITEMS.filter(q => q.status === "queued" || q.status === "on_stage").length;
+      document.getElementById("navQueueCount").textContent = activeQueueCount;
+
+      renderMyReservations();
+      renderSongs();
+    }
+
+    function getMyActiveQueueItems() {
+      if (!CURRENT_USER) return [];
+      const myPerf = ((CURRENT_PROFILE && CURRENT_PROFILE.performer_name) || "").trim().toLowerCase();
+      return QUEUE_ITEMS.filter(q =>
+        (q.status === "queued" || q.status === "on_stage") && (
+          (q.user_id && String(q.user_id) === String(CURRENT_USER.id)) ||
+          (myPerf && String(q.performer_name || "").trim().toLowerCase() === myPerf)
+        )
+      );
+    }
+
+    function renderMyReservations() {
+      const box = document.getElementById("myReservationsBox");
+      if (!CURRENT_USER) {
+        box.classList.add("hidden");
+        return;
+      }
+      box.classList.remove("hidden");
+      const mine = getMyActiveQueueItems();
+      document.getElementById("myResCount").textContent = mine.length;
+
+      const listEl = document.getElementById("myReservationsList");
+      if (!mine.length) {
+        listEl.innerHTML = `<div class="col-span-full opacity-70 italic">You haven't reserved any songs yet. Pick up to 3 songs below!</div>`;
+        return;
+      }
+
+      const songMap = new Map(ACTIVE_SONGS.map(s => [Number(s.song_id), s]));
+      listEl.innerHTML = mine.map((q, idx) => {
+        const song = songMap.get(Number(q.song_id)) || {};
+        const isStage = q.status === "on_stage";
+        return `
+          <div class="toogin-subcard p-3 flex items-center justify-between gap-2">
+            <div>
+              <span class="text-[10px] font-mono uppercase px-2 py-0.5 rounded font-bold" style="background: ${isStage ? 'var(--primary-pink)' : 'rgba(76,224,228,0.2)'}; color: ${isStage ? '#fff' : 'var(--primary-cyan)'};">
+                ${isStage ? '🔥 ON STAGE NOW' : `⏳ Queued #${idx + 1}`}
+              </span>
+              <div class="font-extrabold mt-1">${safeHtml(song.song_name || 'Song #' + q.song_id)}</div>
+              <div class="opacity-75 text-[11px]">${safeHtml(song.artist || '')}</div>
+            </div>
+            ${!isStage ? `
+              <button type="button" onclick="cancelMyQueueItem('${safeJsArg(q.id)}')" class="px-2.5 py-1 rounded-lg text-red-400 hover:bg-red-950/50 font-bold border border-red-500/40">
+                ✕ Cancel
+              </button>
+            ` : ''}
+          </div>
+        `;
+      }).join("");
+    }
+
+    async function reserveSong(songId) {
+      if (!CURRENT_USER || !CURRENT_PROFILE) {
+        showToast("Please sign in or create a quick Singer Account to reserve a song!", true);
+        toggleAuthDrawer(true);
+        return;
+      }
+
+      const mine = getMyActiveQueueItems();
+      if (mine.length >= MAX_SINGER_QUEUE) {
+        return showToast(`You already have ${MAX_SINGER_QUEUE} active song reservations (maximum allowed). Cancel one or wait until you sing!`, true);
+      }
+
+      const existingActiveForSong = QUEUE_ITEMS.find(q =>
+        Number(q.song_id) === Number(songId) && (q.status === "queued" || q.status === "on_stage")
+      );
+      if (existingActiveForSong) {
+        return showToast(`This song is already reserved by ${existingActiveForSong.performer_name}!`, true);
+      }
+
+      const performerName = (CURRENT_PROFILE.performer_name || CURRENT_USER.email || "Singer").trim();
+      const { error } = await sb.from("toogin_karaoke_queue").insert({
+        song_id: Number(songId),
+        user_id: CURRENT_USER.id,
+        performer_name: performerName,
+        status: "queued"
+      });
+
+      if (error) return showToast("Could not reserve song: " + error.message, true);
+      showToast(`🎤 Reserved! You are in the queue as ${performerName}.`);
+      await loadKaraokeData();
+    }
+
+    async function cancelMyQueueItem(queueId) {
+      const { error } = await sb.from("toogin_karaoke_queue").delete().eq("id", queueId);
+      if (error) return showToast("Cancel failed: " + error.message, true);
+      showToast("Reservation cancelled ✓");
+      await loadKaraokeData();
+    }
+
+    function setSongFilter(f) {
+      SONG_FILTER = f;
+      renderSongs();
+    }
+
+    function renderSongs() {
+      const q = (document.getElementById("searchInput").value || "").toLowerCase().trim();
+      const bandMode = isEffectiveBandView();
+      const myActiveCount = getMyActiveQueueItems().length;
+
+      const activeQueueBySong = new Map();
+      const completedSongs = new Set();
+      for (const item of QUEUE_ITEMS) {
+        if (item.status === "queued" || item.status === "on_stage") {
+          activeQueueBySong.set(Number(item.song_id), item);
+        } else if (item.status === "completed") {
+          completedSongs.add(Number(item.song_id));
+        }
+      }
+
+      let availCount = 0;
+      let queuedCount = 0;
+      for (const s of ACTIVE_SONGS) {
+        if (activeQueueBySong.has(Number(s.song_id))) queuedCount++;
+        else availCount++;
+      }
+
+      document.getElementById("countAll").textContent = ACTIVE_SONGS.length;
+      document.getElementById("countAvail").textContent = availCount;
+      document.getElementById("countQueued").textContent = queuedCount;
+
+      for (const f of ["all", "available", "queued"]) {
+        const btn = document.getElementById(`sf_${f}`);
+        if (btn) btn.className = (f === SONG_FILTER) ? "btn-pink" : "btn-cyan";
+      }
+
+      const filtered = ACTIVE_SONGS.filter(s => {
+        const sid = Number(s.song_id);
+        const inQ = activeQueueBySong.has(sid);
+        if (SONG_FILTER === "available" && inQ) return false;
+        if (SONG_FILTER === "queued" && !inQ) return false;
+
+        if (q) {
+          const hay = `${s.song_name || ""} ${s.artist || ""} ${s.original_key || ""} ${s.toogin_preferred_key || ""}`.toLowerCase();
+          if (!hay.includes(q)) return false;
+        }
+        return true;
+      });
+
+      const grid = document.getElementById("songsGrid");
+      if (!filtered.length) {
+        grid.innerHTML = `<div class="col-span-full toogin-panel p-12 text-center opacity-75">No songs match your search.</div>`;
+        return;
+      }
+
+      grid.innerHTML = filtered.map(s => {
+        const sid = Number(s.song_id);
+        const qItem = activeQueueBySong.get(sid);
+        const wasPlayed = completedSongs.has(sid);
+        const origKey = s.original_key || "Standard";
+
+        let reserveBtnHtml = "";
+        if (qItem) {
+          const isMine = CURRENT_USER && String(qItem.user_id) === String(CURRENT_USER.id);
+          if (qItem.status === "on_stage") {
+            reserveBtnHtml = `<button type="button" disabled class="btn-pink">🔥 On Stage (${safeHtml(qItem.performer_name)})</button>`;
+          } else if (isMine) {
+            reserveBtnHtml = `<button type="button" onclick="cancelMyQueueItem('${safeJsArg(qItem.id)}')" class="btn-cyan">⏳ Reserved by You (Cancel ✕)</button>`;
+          } else {
+            reserveBtnHtml = `<button type="button" disabled class="btn-pink">⏳ Queued (${safeHtml(qItem.performer_name)})</button>`;
+          }
+        } else {
+          const limitReached = CURRENT_USER && myActiveCount >= MAX_SINGER_QUEUE;
+          reserveBtnHtml = `
+            <button type="button" onclick="reserveSong(${sid})" ${limitReached ? 'disabled title="Max 3 songs reserved"' : ''} class="btn-pink">
+              🎤 ${limitReached ? 'Max 3 Reserved' : 'Reserve Song'}
+            </button>
+          `;
+        }
+
+        // Band-Only Extra Info & Modal Trigger (Hidden in Singer View)
+        let bandControlsHtml = "";
+        if (bandMode) {
+          const vetoInfo = Array.isArray(s.vetoed_by) && s.vetoed_by.length
+            ? `<span class="px-2 py-0.5 rounded text-[11px] font-bold bg-amber-950/80 text-amber-300 border border-amber-500/40">⚠️ Vetoed by: ${safeHtml(s.vetoed_by.join(", "))}</span>`
+            : "";
+          bandControlsHtml = `
+            <div class="toogin-subcard p-2.5 mt-2 flex flex-wrap items-center justify-between gap-2 text-[11px]">
+              <div class="flex flex-wrap items-center gap-1.5 font-mono">
+                <span class="px-2 py-0.5 rounded font-bold" style="background: rgba(76,224,228,0.15); color: var(--primary-cyan);">
+                  Toogin Key: ${safeHtml(s.toogin_preferred_key || origKey)}
+                </span>
+                <span class="px-2 py-0.5 rounded font-bold" style="background: rgba(235,116,171,0.15); color: var(--primary-pink);">
+                  ${safeHtml(s.tuning_offset || "Eb Standard (-1)")}
+                </span>
+                ${vetoInfo}
+              </div>
+              <button type="button" onclick="openBandModal(${sid})" class="btn-cyan text-[11px] py-1 px-3">
+                🎸 Band Chart &amp; Info
+              </button>
+            </div>
+          `;
+        }
+
+        return `
+          <div class="toogin-panel p-4 flex flex-col justify-between gap-3">
+            <div class="space-y-2">
+              <div class="flex items-start justify-between gap-2">
+                <div>
+                  <h3 class="text-base font-extrabold leading-snug" style="color: var(--primary-pink);">${safeHtml(s.song_name)}</h3>
+                  <p class="text-xs font-bold opacity-85">${safeHtml(s.artist)}</p>
+                </div>
+                <div class="flex items-center gap-1.5 shrink-0">
+                  ${wasPlayed ? `<span class="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-950 text-emerald-300 border border-emerald-500/40">✓ Played Tonight</span>` : ""}
+                  <span class="px-2.5 py-1 rounded-lg text-xs font-mono font-extrabold" style="background: var(--subcard-bg); border: 1px solid var(--border-color);">
+                    Orig Key: ${safeHtml(origKey)}
+                  </span>
+                </div>
+              </div>
+
+              <!-- End-User Greyed-Out Song Key Dropdown -->
+              <div class="pt-1">
+                <select disabled class="toogin-input w-full text-xs opacity-60 cursor-not-allowed" title="Available key options will be confirmed with the band">
+                  <option>Song Key Option: Original Key (${safeHtml(origKey)}) — Custom Keys TBD</option>
+                </select>
+              </div>
+
+              ${bandControlsHtml}
+            </div>
+
+            <!-- Card Footer: Play in Spotify + Reserve Song -->
+            <div class="flex flex-wrap items-center justify-between gap-2 pt-2 border-t" style="border-color: var(--border-color);">
+              <button type="button" onclick="playInSpotify('${safeJsArg(s.spotify_uri)}', '${safeJsArg(s.song_name)}', '${safeJsArg(s.artist)}')"
+                class="btn-cyan flex items-center gap-1.5">
+                ▶ Play in Spotify
+              </button>
+              ${reserveBtnHtml}
+            </div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    // ========================================================================
+    // BAND MEMBER MODAL & LIVE KEY TRANSPOSITION ENGINE
+    // ========================================================================
+    function parseMusicalRoot(keyStr) {
+      const m = String(keyStr || "").trim().match(/^([A-Ga-g][#b]?)(.*)$/);
+      if (!m) return null;
+      const idx = NOTE_MAP[m[1].toLowerCase()];
+      if (idx === undefined) return null;
+      return { index: idx, suffix: m[2] || "" };
+    }
+
+    function transposeChordToken(chord, semitones) {
+      return String(chord || "").replace(/^([A-Ga-g][#b]?)(.*)$/, (_, root, rest) => {
+        const idx = NOTE_MAP[root.toLowerCase()];
+        if (idx === undefined) return chord;
+        const next = NOTES[((idx + semitones) % 12 + 12) % 12];
+        return next + rest;
+      });
+    }
+
+    function transposeBracketedLine(line, semitones) {
+      return String(line || "").replace(/\[([^\]]+)\]/g, (_, token) => {
+        const parts = token.split("/").map(p => transposeChordToken(p.trim(), semitones));
+        return "[" + parts.join("/") + "]";
+      });
+    }
+
+    function parseChartJsonSafe(rawText) {
+      if (!rawText) return null;
+      if (typeof rawText === "object") return rawText;
+      try {
+        return JSON.parse(rawText);
+      } catch (e) {
+        return { sections: [{ name: "Chart", lines: String(rawText).split("\n") }], notes: "" };
+      }
+    }
+
+    function openBandModal(songId) {
+      const song = ACTIVE_SONGS.find(x => Number(x.song_id) === Number(songId));
+      if (!song) return;
+      ACTIVE_MODAL_SONG = song;
+      MODAL_SEMITONE_SHIFT = 0;
+      document.getElementById("bmTargetKeySelect").value = "";
+
+      // Default to guitar_text if available, else guitar_img
+      if (song.guitar_chart_text) MODAL_TAB = "guitar_text";
+      else if (song.guitar_chart_url) MODAL_TAB = "guitar_img";
+      else if (song.bass_chart_text) MODAL_TAB = "bass_text";
+      else MODAL_TAB = "bass_img";
+
+      document.getElementById("bmTitle").textContent = song.song_name || "Song";
+      document.getElementById("bmArtist").textContent = `${song.artist || ""}${song.album ? " • " + song.album : ""}${song.duration_display ? " (" + song.duration_display + ")" : ""}`;
+      document.getElementById("bmOrigKey").textContent = song.original_key || "—";
+      document.getElementById("bmPrefKey").textContent = song.toogin_preferred_key || song.original_key || "—";
+      document.getElementById("bmTuning").textContent = song.tuning_offset || "Eb Standard (-1)";
+      document.getElementById("bmVetoes").textContent = (Array.isArray(song.vetoed_by) && song.vetoed_by.length)
+        ? `🚫 ${song.vetoed_by.join(", ")}`
+        : "✅ 0 Vetoes";
+
+      renderBandModalContent();
+      document.getElementById("bandChartModal").classList.remove("hidden");
+    }
+
+    function closeBandModal() {
+      document.getElementById("bandChartModal").classList.add("hidden");
+      ACTIVE_MODAL_SONG = null;
+    }
+
+    function setBandModalTab(tab) {
+      MODAL_TAB = tab;
+      renderBandModalContent();
+    }
+
+    function shiftModalSemitones(delta) {
+      MODAL_SEMITONE_SHIFT = ((MODAL_SEMITONE_SHIFT + delta) % 12);
+      renderBandModalContent();
+    }
+
+    function resetModalSemitones() {
+      MODAL_SEMITONE_SHIFT = 0;
+      document.getElementById("bmTargetKeySelect").value = "";
+      renderBandModalContent();
+    }
+
+    function jumpModalToTargetKey(targetRoot) {
+      if (!targetRoot || !ACTIVE_MODAL_SONG) return;
+      const chartObj = parseChartJsonSafe(
+        MODAL_TAB === "bass_text" ? ACTIVE_MODAL_SONG.bass_chart_text : ACTIVE_MODAL_SONG.guitar_chart_text
+      );
+      const baseKeyStr = (chartObj && chartObj.written_key) || ACTIVE_MODAL_SONG.toogin_preferred_key || ACTIVE_MODAL_SONG.original_key || "C";
+      const parsedBase = parseMusicalRoot(baseKeyStr);
+      const parsedTarget = parseMusicalRoot(targetRoot);
+      if (!parsedBase || !parsedTarget) return;
+
+      let diff = (parsedTarget.index - parsedBase.index) % 12;
+      if (diff > 6) diff -= 12;
+      if (diff < -6) diff += 12;
+      MODAL_SEMITONE_SHIFT = diff;
+      renderBandModalContent();
+    }
+
+    function formatHighlightedChords(lineStr) {
+      const escaped = safeHtml(lineStr);
+      return escaped.replace(/\[([^\]]+)\]/g, `<span class="px-1.5 py-0.5 rounded font-extrabold mx-0.5" style="background: rgba(235,116,171,0.22); color: var(--primary-pink); border: 1px solid rgba(235,116,171,0.45);">$1</span>`);
+    }
+
+    function renderBandModalContent() {
+      if (!ACTIVE_MODAL_SONG) return;
+      const s = ACTIVE_MODAL_SONG;
+
+      for (const t of ["guitar_text", "bass_text", "guitar_img", "bass_img"]) {
+        const btn = document.getElementById(`bmTab_${t}`);
+        if (btn) btn.className = (t === MODAL_TAB) ? "btn-pink" : "btn-cyan";
+      }
+
+      const sign = MODAL_SEMITONE_SHIFT > 0 ? `+${MODAL_SEMITONE_SHIFT}` : `${MODAL_SEMITONE_SHIFT}`;
+      document.getElementById("bmSemitoneBadge").textContent = `${sign} Semi`;
+
+      const vp = document.getElementById("bmChartViewport");
+
+      if (MODAL_TAB === "guitar_img" || MODAL_TAB === "bass_img") {
+        const imgUrl = MODAL_TAB === "bass_img" ? s.bass_chart_url : s.guitar_chart_url;
+        if (!imgUrl) {
+          vp.innerHTML = `<div class="py-12 text-center opacity-70">No scanned chart photo uploaded for this instrument yet.</div>`;
+          return;
+        }
+        vp.innerHTML = `
+          <div class="flex flex-col items-center gap-3">
+            <img src="${safeHtml(imgUrl)}" alt="Scanned Chart" class="max-h-[62vh] max-w-full object-contain rounded-xl border" style="border-color: var(--border-color);" />
+            <a href="${safeHtml(imgUrl)}" target="_blank" rel="noopener" class="btn-cyan">Open Full-Size Photo in New Tab ↗</a>
+          </div>
+        `;
+        return;
+      }
+
+      const rawText = MODAL_TAB === "bass_text" ? s.bass_chart_text : s.guitar_chart_text;
+      const chartObj = parseChartJsonSafe(rawText);
+      if (!chartObj || !Array.isArray(chartObj.sections) || !chartObj.sections.length) {
+        vp.innerHTML = `<div class="py-12 text-center opacity-70">No digitized text chart stored for this instrument yet. Click <b>📷 Scan Photo</b> above to view the handwritten sheet.</div>`;
+        return;
+      }
+
+      const baseWrittenKey = chartObj.written_key || s.toogin_preferred_key || s.original_key || "";
+      const effectiveKey = baseWrittenKey ? transposeChordToken(baseWrittenKey, MODAL_SEMITONE_SHIFT) : "—";
+
+      const sectionsHtml = chartObj.sections.map(sec => {
+        const linesHtml = (sec.lines || []).map(line => {
+          const transposed = transposeBracketedLine(line, MODAL_SEMITONE_SHIFT);
+          return `<div class="font-mono text-base sm:text-lg leading-relaxed py-0.5">${formatHighlightedChords(transposed)}</div>`;
+        }).join("");
+        return `
+          <div class="toogin-panel p-3.5 space-y-1.5">
+            <div class="text-xs font-extrabold uppercase tracking-wider" style="color: var(--primary-cyan);">${safeHtml(sec.name || "Section")}</div>
+            <div>${linesHtml}</div>
+          </div>
+        `;
+      }).join("");
+
+      vp.innerHTML = `
+        <div class="space-y-3">
+          <div class="flex flex-wrap items-center justify-between gap-2 text-xs font-mono border-b pb-2" style="border-color: var(--border-color);">
+            <span>Written Chart Key: <strong>${safeHtml(baseWrittenKey || "?")}</strong> → Displaying in Key: <strong style="color: var(--primary-cyan); font-size: 0.95rem;">${safeHtml(effectiveKey)}</strong></span>
+            ${chartObj.cam_tuning_note ? `<span>Cam's Sheet Note: <strong style="color: var(--primary-pink);">${safeHtml(chartObj.cam_tuning_note)}</strong></span>` : ""}
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            ${sectionsHtml}
+          </div>
+          ${chartObj.notes ? `<div class="p-3 rounded-xl font-mono text-xs" style="background: rgba(235,116,171,0.12); border: 1px dashed var(--primary-pink);">📝 <strong>Performance Notes:</strong> ${safeHtml(chartObj.notes)}</div>` : ""}
+        </div>
+      `;
+    }
+
+    // ========================================================================
+    // REALTIME & AUTH BOOTSTRAP
+    // ========================================================================
+    sb.auth.onAuthStateChange(async (event, session) => {
+      if (event === "PASSWORD_RECOVERY") {
+        document.getElementById("recoveryModal").classList.remove("hidden");
+      }
+      if (session?.user) {
+        CURRENT_USER = session.user;
+        await ensureUserProfile(session.user);
+      } else {
+        CURRENT_USER = null;
+        CURRENT_PROFILE = null;
+      }
+      updateRoleAndAuthUI();
+      await loadKaraokeData();
+    });
+
+    sb.channel("toogin_karaoke_live")
+      .on("postgres_changes", { event: "*", schema: "public", table: "toogin_active_karaoke" }, () => loadKaraokeData())
+      .on("postgres_changes", { event: "*", schema: "public", table: "toogin_karaoke_queue" }, () => loadKaraokeData())
+      .subscribe();
+
+    loadKaraokeData();
+  </script>
+</body>
+</html>
