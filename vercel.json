@@ -1,8 +1,0 @@
-JSON
-{
-  "redirects": [
-    { "source": "/karaoke/Karaoke.html", "destination": "/karaoke/karaoke.html", "permanent": false },
-    { "source": "/karaoke/Voting.html", "destination": "/karaoke/voting.html", "permanent": false },
-    { "source": "/karaoke/Queue.html", "destination": "/karaoke/queue.html", "permanent": false }
-  ]
-}
