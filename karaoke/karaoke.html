@@ -21,6 +21,11 @@
       --card-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
       --border-color: rgba(0, 0, 0, 0.12);
       --subcard-bg: #f4f8f9;
+      --cyan-text: #095d60;
+      --cyan-badge-bg: rgba(9, 93, 96, 0.12);
+      --cyan-badge-border: #0b7a7e;
+      --header-pill-bg: #ffffff;
+      --header-pill-text: #111111;
     }
     body.dark-mode {
       --bg-color: #0d0d0d;
@@ -29,9 +34,26 @@
       --card-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
       --border-color: rgba(255, 255, 255, 0.12);
       --subcard-bg: #111111;
+      --cyan-text: #4ce0e4;
+      --cyan-badge-bg: rgba(76, 224, 228, 0.15);
+      --cyan-badge-border: #4ce0e4;
+      --header-pill-bg: rgba(76, 224, 228, 0.15);
+      --header-pill-text: #4ce0e4;
     }
     body {
       padding-bottom: 7rem;
+    }
+    .logo-img {
+      max-width: 210px;
+      height: auto;
+      background: transparent !important;
+      box-shadow: none !important;
+      border-radius: 0 !important;
+      filter: drop-shadow(0 6px 16px rgba(0, 0, 0, 0.35));
+      transition: transform 0.3s ease;
+    }
+    .logo-img:hover {
+      transform: translateY(-2px);
     }
     .toogin-panel {
       background-color: var(--card-bg);
@@ -68,6 +90,7 @@
       font-size: 0.78rem;
       letter-spacing: 0.4px;
       transition: all 0.2s ease;
+      box-shadow: 0 3px 8px rgba(0, 0, 0, 0.12);
     }
     .btn-cyan:hover {
       filter: brightness(0.92);
@@ -102,7 +125,7 @@
   <!-- HEADER WITH RESTRICTED KARAOKE NAVIGATION -->
   <header style="margin-bottom: 1rem; padding: 1.5rem 0 1rem 0;">
     <a href="index.html">
-      <img src="../black and pink.png" onerror="this.onerror=null;this.src='TooginLogo.jpg';" alt="TooginTV Logo" class="logo-img" style="max-width: 200px;" />
+      <img src="/tooginlogo.png" onerror="this.onerror=null;this.src='https://www.toogintv.com/tooginlogo.png';" alt="TooginTV Logo" class="logo-img" />
     </a>
 
     <nav class="header-controls">
@@ -110,10 +133,10 @@
       <a href="queue.html" class="btn">📋 Live Queue (<span id="navQueueCount">0</span>)</a>
 
       <!-- Band Member / Admin Only Controls -->
-      <a href="voting.html" id="navVotingLink" class="btn btn-outline hidden" style="border-color: var(--primary-cyan);">
+      <a href="voting.html" id="navVotingLink" class="btn btn-outline hidden">
         🗳️ Band Veto
       </a>
-      <button id="viewAsSingerBtn" type="button" onclick="toggleViewAsSinger()" class="btn btn-outline hidden" style="border-color: var(--primary-cyan);">
+      <button id="viewAsSingerBtn" type="button" onclick="toggleViewAsSinger()" class="btn btn-outline hidden">
         👁️ View as Singer: OFF
       </button>
 
@@ -121,17 +144,17 @@
     </nav>
 
     <!-- Logged-In User Bar / Auth Trigger -->
-    <div class=" flex flex-wrap items-center justify-center gap-2 text-xs mt-1">
+    <div class="flex flex-wrap items-center justify-center gap-2 text-xs mt-1">
       <div id="userStatusBar" class="hidden flex flex-wrap items-center gap-2">
-        <span id="roleBadge" class="px-3 py-1 rounded-full font-bold uppercase tracking-wider text-[11px]" style="background: rgba(76,224,228,0.15); border: 1px solid var(--primary-cyan); color: var(--primary-cyan);"></span>
-        <button onclick="openProfileModal()" class="px-3 py-1 rounded-full font-bold text-xs" style="background: rgba(235,116,171,0.18); border: 1px solid var(--primary-pink);">
+        <span id="roleBadge" class="px-3 py-1 rounded-full font-bold uppercase tracking-wider text-[11px]" style="background: var(--header-pill-bg); border: 1.5px solid var(--cyan-badge-border); color: var(--header-pill-text);"></span>
+        <button onclick="openProfileModal()" class="px-3 py-1 rounded-full font-bold text-xs" style="background: var(--card-bg); color: var(--text-color); border: 1.5px solid var(--primary-pink);">
           ✎ <span id="navPerformerName">Performer</span>
         </button>
-        <button onclick="handleSignOut()" class="px-3 py-1 rounded-full text-xs opacity-75 hover:opacity-100" style="border: 1px solid var(--border-color);">
+        <button onclick="handleSignOut()" class="px-3 py-1 rounded-full text-xs font-semibold" style="background: var(--card-bg); color: var(--text-color); border: 1.5px solid var(--border-color);">
           Sign Out
         </button>
       </div>
-      <button id="openAuthBtn" onclick="toggleAuthDrawer()" class="btn-cyan text-xs">
+      <button id="openAuthBtn" onclick="toggleAuthDrawer()" class="btn-pink text-xs">
         🔑 Sign In / Create Singer Account
       </button>
     </div>
@@ -207,7 +230,7 @@
             🎤 My Song Reservations (<span id="myResCount">0</span> / 3 Max)
           </span>
         </div>
-        <a href="queue.html" class="text-xs font-bold underline" style="color: var(--primary-cyan);">View Full Live Queue →</a>
+        <a href="queue.html" class="text-xs font-bold underline" style="color: var(--cyan-text);">View Full Live Queue →</a>
       </div>
       <div id="myReservationsList" class="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs"></div>
     </section>
@@ -243,7 +266,7 @@
       <!-- Modal Header -->
       <div class="flex flex-wrap items-start justify-between gap-3 border-b pb-3" style="border-color: var(--border-color);">
         <div>
-          <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider" style="background: rgba(76,224,228,0.18); color: var(--primary-cyan); border: 1px solid var(--primary-cyan);">
+          <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider" style="background: var(--cyan-badge-bg); color: var(--cyan-text); border: 1px solid var(--cyan-badge-border);">
             🎸 Band Member Inspection &amp; Live Chart Transposer
           </span>
           <h2 id="bmTitle" class="text-xl font-extrabold mt-1" style="color: var(--primary-pink); margin-bottom: 0;">Song Title</h2>
@@ -260,7 +283,7 @@
         </div>
         <div class="toogin-subcard p-2.5">
           <div class="text-[10px] uppercase font-bold opacity-65">Toogin Preferred Key</div>
-          <div id="bmPrefKey" class="text-sm font-extrabold font-mono mt-0.5" style="color: var(--primary-cyan);">—</div>
+          <div id="bmPrefKey" class="text-sm font-extrabold font-mono mt-0.5" style="color: var(--cyan-text);">—</div>
         </div>
         <div class="toogin-subcard p-2.5">
           <div class="text-[10px] uppercase font-bold opacity-65">Guitar / Bass Tuning</div>
@@ -281,7 +304,7 @@
           <button type="button" id="bmTab_bass_img" onclick="setBandModalTab('bass_img')" class="btn-cyan">📷 Bass Scan Photo</button>
         </div>
 
-        <!-- Live Key Transpose Controls -->
+        <!-- Live Key Transpose Controls (Auto-hidden on photo scan tabs) -->
         <div id="bmTransposeControls" class="flex flex-wrap items-center gap-2">
           <span class="font-bold text-[11px] uppercase opacity-80">Adjust Chart Key:</span>
           <button type="button" onclick="shiftModalSemitones(-1)" class="px-2.5 py-1 rounded-lg font-mono font-bold border" style="border-color: var(--border-color);">-1 Semi</button>
@@ -373,10 +396,14 @@
 
   <script>
     // ========================================================================
-    // THEME INITIALIZATION (MATCHES TOOGINTV MAIN.JS)
+    // THEME INITIALIZATION (SYNCED WITH LOCALSTORAGE)
     // ========================================================================
     (function initTheme() {
-      const saved = localStorage.getItem("toogintv-theme");
+      let saved = localStorage.getItem("toogintv-theme");
+      if (!saved) {
+        saved = "dark";
+        localStorage.setItem("toogintv-theme", "dark");
+      }
       if (saved === "light") {
         document.body.classList.remove("dark-mode");
       } else {
@@ -433,8 +460,8 @@
     function showToast(msg, isError = false) {
       const el = document.getElementById("toastBanner");
       el.textContent = msg;
-      el.style.background = isError ? "rgba(185, 28, 28, 0.25)" : "rgba(76, 224, 228, 0.18)";
-      el.style.borderColor = isError ? "#ef4444" : "var(--primary-cyan)";
+      el.style.background = isError ? "rgba(185, 28, 28, 0.25)" : "var(--cyan-badge-bg)";
+      el.style.borderColor = isError ? "#ef4444" : "var(--cyan-badge-border)";
       el.classList.remove("hidden");
       clearTimeout(window._toastTimer);
       window._toastTimer = setTimeout(() => el.classList.add("hidden"), 4500);
@@ -452,6 +479,14 @@
       VIEW_AS_SINGER = !VIEW_AS_SINGER;
       updateRoleAndAuthUI();
       renderSongs();
+    }
+
+    // Unified ownership check (matches user_id OR case-insensitive performer_name)
+    function isQueueItemMine(qItem) {
+      if (!CURRENT_USER || !qItem) return false;
+      if (qItem.user_id && String(qItem.user_id) === String(CURRENT_USER.id)) return true;
+      const myPerf = ((CURRENT_PROFILE && CURRENT_PROFILE.performer_name) || "").trim().toLowerCase();
+      return Boolean(myPerf && String(qItem.performer_name || "").trim().toLowerCase() === myPerf);
     }
 
     // ========================================================================
@@ -557,6 +592,7 @@
       CURRENT_PROFILE = null;
       VIEW_AS_SINGER = false;
       updateRoleAndAuthUI();
+      renderMyReservations();
       renderSongs();
     }
 
@@ -595,12 +631,20 @@
       const last = document.getElementById("editLastName").value.trim();
       if (!perf || !CURRENT_USER) return showToast("Stage / Performer Name is required.", true);
 
+      const oldName = CURRENT_PROFILE ? CURRENT_PROFILE.performer_name : null;
+
       const { error } = await sb.from("toogin_profiles").update({
         performer_name: perf, first_name: first, last_name: last
       }).eq("id", CURRENT_USER.id);
       if (error) return showToast(error.message, true);
 
+      // Cascade performer_name rename to user's queued songs and vetoes
       await sb.from("toogin_karaoke_queue").update({ performer_name: perf }).eq("user_id", CURRENT_USER.id);
+      await sb.from("toogin_veto_votes").update({ performer_name: perf }).eq("user_id", CURRENT_USER.id);
+      if (oldName && oldName !== perf && isRealBandOrAdmin()) {
+        await sb.from("toogin_karaoke_queue").update({ performer_name: perf }).eq("performer_name", oldName);
+        await sb.from("toogin_veto_votes").update({ performer_name: perf }).eq("performer_name", oldName);
+      }
 
       CURRENT_PROFILE.performer_name = perf;
       CURRENT_PROFILE.first_name = first;
@@ -620,10 +664,8 @@
       const realBand = isRealBandOrAdmin();
       const effectiveBand = isEffectiveBandView();
 
-      // Only show voting.html link if user is a band member/admin AND not in "View as Singer" mode
       document.getElementById("navVotingLink").classList.toggle("hidden", !effectiveBand);
 
-      // Show "View as Singer" toggle button to all band members & admins
       const vasBtn = document.getElementById("viewAsSingerBtn");
       vasBtn.classList.toggle("hidden", !realBand);
       if (realBand) {
@@ -669,7 +711,7 @@
       const [activeRes, masterRes, queueRes] = await Promise.all([
         sb.from("toogin_active_karaoke").select("*").order("song_name"),
         sb.from("toogin_jams").select("id, spotify_uri, album, duration_display, original_key, toogin_preferred_key, tuning_offset, guitar_chart_url, bass_chart_url, guitar_chart_text, bass_chart_text"),
-        sb.from("toogin_karaoke_queue").select("*").order("created_at")
+        sb.from("toogin_karaoke_queue").select("*").order("created_at", { ascending: true }).order("id", { ascending: true })
       ]);
 
       const masterMap = new Map((masterRes.data || []).map(m => [Number(m.id), m]));
@@ -702,12 +744,8 @@
 
     function getMyActiveQueueItems() {
       if (!CURRENT_USER) return [];
-      const myPerf = ((CURRENT_PROFILE && CURRENT_PROFILE.performer_name) || "").trim().toLowerCase();
       return QUEUE_ITEMS.filter(q =>
-        (q.status === "queued" || q.status === "on_stage") && (
-          (q.user_id && String(q.user_id) === String(CURRENT_USER.id)) ||
-          (myPerf && String(q.performer_name || "").trim().toLowerCase() === myPerf)
-        )
+        (q.status === "queued" || q.status === "on_stage") && isQueueItemMine(q)
       );
     }
 
@@ -727,15 +765,20 @@
         return;
       }
 
+      const allQueued = QUEUE_ITEMS.filter(q => q.status === "queued");
       const songMap = new Map(ACTIVE_SONGS.map(s => [Number(s.song_id), s]));
-      listEl.innerHTML = mine.map((q, idx) => {
+
+      listEl.innerHTML = mine.map(q => {
         const song = songMap.get(Number(q.song_id)) || {};
         const isStage = q.status === "on_stage";
+        const globalPos = allQueued.findIndex(x => String(x.id) === String(q.id)) + 1;
+        const posLabel = isStage ? "🔥 ON STAGE NOW" : `⏳ Queue Position #${globalPos || 1}`;
+
         return `
           <div class="toogin-subcard p-3 flex items-center justify-between gap-2">
             <div>
-              <span class="text-[10px] font-mono uppercase px-2 py-0.5 rounded font-bold" style="background: ${isStage ? 'var(--primary-pink)' : 'rgba(76,224,228,0.2)'}; color: ${isStage ? '#fff' : 'var(--primary-cyan)'};">
-                ${isStage ? '🔥 ON STAGE NOW' : `⏳ Queued #${idx + 1}`}
+              <span class="text-[10px] font-mono uppercase px-2 py-0.5 rounded font-bold" style="background: ${isStage ? 'var(--primary-pink)' : 'var(--cyan-badge-bg)'}; color: ${isStage ? '#fff' : 'var(--cyan-text)'}; border: 1px solid ${isStage ? 'var(--primary-pink)' : 'var(--cyan-badge-border)'};">
+                ${posLabel}
               </span>
               <div class="font-extrabold mt-1">${safeHtml(song.song_name || 'Song #' + q.song_id)}</div>
               <div class="opacity-75 text-[11px]">${safeHtml(song.artist || '')}</div>
@@ -852,7 +895,7 @@
 
         let reserveBtnHtml = "";
         if (qItem) {
-          const isMine = CURRENT_USER && String(qItem.user_id) === String(CURRENT_USER.id);
+          const isMine = isQueueItemMine(qItem);
           if (qItem.status === "on_stage") {
             reserveBtnHtml = `<button type="button" disabled class="btn-pink">🔥 On Stage (${safeHtml(qItem.performer_name)})</button>`;
           } else if (isMine) {
@@ -878,7 +921,7 @@
           bandControlsHtml = `
             <div class="toogin-subcard p-2.5 mt-2 flex flex-wrap items-center justify-between gap-2 text-[11px]">
               <div class="flex flex-wrap items-center gap-1.5 font-mono">
-                <span class="px-2 py-0.5 rounded font-bold" style="background: rgba(76,224,228,0.15); color: var(--primary-cyan);">
+                <span class="px-2 py-0.5 rounded font-bold" style="background: var(--cyan-badge-bg); color: var(--cyan-text); border: 1px solid var(--cyan-badge-border);">
                   Toogin Key: ${safeHtml(s.toogin_preferred_key || origKey)}
                 </span>
                 <span class="px-2 py-0.5 rounded font-bold" style="background: rgba(235,116,171,0.15); color: var(--primary-pink);">
@@ -976,7 +1019,6 @@
       MODAL_SEMITONE_SHIFT = 0;
       document.getElementById("bmTargetKeySelect").value = "";
 
-      // Default to guitar_text if available, else guitar_img
       if (song.guitar_chart_text) MODAL_TAB = "guitar_text";
       else if (song.guitar_chart_url) MODAL_TAB = "guitar_img";
       else if (song.bass_chart_text) MODAL_TAB = "bass_text";
@@ -1047,12 +1089,15 @@
         if (btn) btn.className = (t === MODAL_TAB) ? "btn-pink" : "btn-cyan";
       }
 
+      const isImgTab = (MODAL_TAB === "guitar_img" || MODAL_TAB === "bass_img");
+      document.getElementById("bmTransposeControls").classList.toggle("hidden", isImgTab);
+
       const sign = MODAL_SEMITONE_SHIFT > 0 ? `+${MODAL_SEMITONE_SHIFT}` : `${MODAL_SEMITONE_SHIFT}`;
       document.getElementById("bmSemitoneBadge").textContent = `${sign} Semi`;
 
       const vp = document.getElementById("bmChartViewport");
 
-      if (MODAL_TAB === "guitar_img" || MODAL_TAB === "bass_img") {
+      if (isImgTab) {
         const imgUrl = MODAL_TAB === "bass_img" ? s.bass_chart_url : s.guitar_chart_url;
         if (!imgUrl) {
           vp.innerHTML = `<div class="py-12 text-center opacity-70">No scanned chart photo uploaded for this instrument yet.</div>`;
@@ -1084,7 +1129,7 @@
         }).join("");
         return `
           <div class="toogin-panel p-3.5 space-y-1.5">
-            <div class="text-xs font-extrabold uppercase tracking-wider" style="color: var(--primary-cyan);">${safeHtml(sec.name || "Section")}</div>
+            <div class="text-xs font-extrabold uppercase tracking-wider" style="color: var(--cyan-text);">${safeHtml(sec.name || "Section")}</div>
             <div>${linesHtml}</div>
           </div>
         `;
@@ -1093,7 +1138,7 @@
       vp.innerHTML = `
         <div class="space-y-3">
           <div class="flex flex-wrap items-center justify-between gap-2 text-xs font-mono border-b pb-2" style="border-color: var(--border-color);">
-            <span>Written Chart Key: <strong>${safeHtml(baseWrittenKey || "?")}</strong> → Displaying in Key: <strong style="color: var(--primary-cyan); font-size: 0.95rem;">${safeHtml(effectiveKey)}</strong></span>
+            <span>Written Chart Key: <strong>${safeHtml(baseWrittenKey || "?")}</strong> → Displaying in Key: <strong style="color: var(--cyan-text); font-size: 0.95rem;">${safeHtml(effectiveKey)}</strong></span>
             ${chartObj.cam_tuning_note ? `<span>Cam's Sheet Note: <strong style="color: var(--primary-pink);">${safeHtml(chartObj.cam_tuning_note)}</strong></span>` : ""}
           </div>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">

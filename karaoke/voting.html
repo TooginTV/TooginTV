@@ -21,6 +21,11 @@
       --card-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
       --border-color: rgba(0, 0, 0, 0.12);
       --subcard-bg: #f4f8f9;
+      --cyan-text: #095d60;
+      --cyan-badge-bg: rgba(9, 93, 96, 0.12);
+      --cyan-badge-border: #0b7a7e;
+      --header-pill-bg: #ffffff;
+      --header-pill-text: #111111;
     }
     body.dark-mode {
       --bg-color: #0d0d0d;
@@ -29,6 +34,23 @@
       --card-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
       --border-color: rgba(255, 255, 255, 0.12);
       --subcard-bg: #111111;
+      --cyan-text: #4ce0e4;
+      --cyan-badge-bg: rgba(76, 224, 228, 0.15);
+      --cyan-badge-border: #4ce0e4;
+      --header-pill-bg: rgba(76, 224, 228, 0.15);
+      --header-pill-text: #4ce0e4;
+    }
+    .logo-img {
+      max-width: 210px;
+      height: auto;
+      background: transparent !important;
+      box-shadow: none !important;
+      border-radius: 0 !important;
+      filter: drop-shadow(0 6px 16px rgba(0, 0, 0, 0.35));
+      transition: transform 0.3s ease;
+    }
+    .logo-img:hover {
+      transform: translateY(-2px);
     }
     .toogin-panel {
       background-color: var(--card-bg);
@@ -82,7 +104,7 @@
   <!-- HEADER -->
   <header style="margin-bottom: 1rem; padding: 1.5rem 0 1rem 0;">
     <a href="index.html">
-      <img src="../black and pink.png" onerror="this.onerror=null;this.src='TooginLogo.jpg';" alt="TooginTV Logo" class="logo-img" style="max-width: 200px;" />
+      <img src="/tooginlogo.png" onerror="this.onerror=null;this.src='https://www.toogintv.com/tooginlogo.png';" alt="TooginTV Logo" class="logo-img" />
     </a>
 
     <nav class="header-controls">
@@ -92,7 +114,7 @@
     </nav>
 
     <div id="headerUserBar" class="hidden flex flex-wrap items-center justify-center gap-2 text-xs mt-1">
-      <span id="roleBadge" class="px-3 py-1 rounded-full font-bold uppercase tracking-wider text-[11px]" style="background: rgba(76,224,228,0.15); border: 1px solid var(--primary-cyan); color: var(--primary-cyan);"></span>
+      <span id="roleBadge" class="px-3 py-1 rounded-full font-bold uppercase tracking-wider text-[11px]" style="background: var(--header-pill-bg); border: 1.5px solid var(--cyan-badge-border); color: var(--header-pill-text);"></span>
       <button onclick="openProfileModal()" class="px-3 py-1 rounded-full font-bold text-xs" style="background: rgba(235,116,171,0.18); border: 1px solid var(--primary-pink);">
         ✎ <span id="navPerformerName">Performer</span>
       </button>
@@ -275,7 +297,8 @@
 
   <script>
     (function initTheme() {
-      const saved = localStorage.getItem("toogintv-theme");
+      let saved = localStorage.getItem("toogintv-theme");
+      if (!saved) { saved = "dark"; localStorage.setItem("toogintv-theme", "dark"); }
       if (saved === "light") document.body.classList.remove("dark-mode");
       else document.body.classList.add("dark-mode");
       const btn = document.getElementById("themeToggle");
