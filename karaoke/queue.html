@@ -21,6 +21,11 @@
       --card-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
       --border-color: rgba(0, 0, 0, 0.12);
       --subcard-bg: #f4f8f9;
+      --cyan-text: #095d60;
+      --cyan-badge-bg: rgba(9, 93, 96, 0.12);
+      --cyan-badge-border: #0b7a7e;
+      --header-pill-bg: #ffffff;
+      --header-pill-text: #111111;
     }
     body.dark-mode {
       --bg-color: #0d0d0d;
@@ -29,6 +34,23 @@
       --card-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
       --border-color: rgba(255, 255, 255, 0.12);
       --subcard-bg: #111111;
+      --cyan-text: #4ce0e4;
+      --cyan-badge-bg: rgba(76, 224, 228, 0.15);
+      --cyan-badge-border: #4ce0e4;
+      --header-pill-bg: rgba(76, 224, 228, 0.15);
+      --header-pill-text: #4ce0e4;
+    }
+    .logo-img {
+      max-width: 210px;
+      height: auto;
+      background: transparent !important;
+      box-shadow: none !important;
+      border-radius: 0 !important;
+      filter: drop-shadow(0 6px 16px rgba(0, 0, 0, 0.35));
+      transition: transform 0.3s ease;
+    }
+    .logo-img:hover {
+      transform: translateY(-2px);
     }
     .toogin-panel {
       background-color: var(--card-bg);
@@ -50,6 +72,10 @@
       border-radius: 12px;
       padding: 0.55rem 0.85rem;
     }
+    .toogin-input:focus {
+      outline: none;
+      border-color: var(--primary-pink);
+    }
     .btn-cyan {
       background-color: var(--primary-cyan);
       color: #111111;
@@ -61,6 +87,11 @@
       font-size: 0.76rem;
       letter-spacing: 0.4px;
       transition: all 0.2s ease;
+      box-shadow: 0 3px 8px rgba(0, 0, 0, 0.12);
+    }
+    .btn-cyan:hover {
+      filter: brightness(0.92);
+      transform: translateY(-1px);
     }
     .btn-pink {
       background-color: var(--primary-pink);
@@ -75,6 +106,10 @@
       transition: all 0.2s ease;
       box-shadow: 0 4px 10px rgba(235, 116, 171, 0.3);
     }
+    .btn-pink:hover:not(:disabled) {
+      background-color: var(--pink-hover);
+      transform: translateY(-1px);
+    }
   </style>
 </head>
 <body class="dark-mode">
@@ -82,7 +117,7 @@
   <!-- HEADER -->
   <header style="margin-bottom: 1rem; padding: 1.5rem 0 1rem 0;">
     <a href="index.html">
-      <img src="../black and pink.png" onerror="this.onerror=null;this.src='TooginLogo.jpg';" alt="TooginTV Logo" class="logo-img" style="max-width: 200px;" />
+      <img src="/tooginlogo.png" onerror="this.onerror=null;this.src='https://www.toogintv.com/tooginlogo.png';" alt="TooginTV Logo" class="logo-img" />
     </a>
 
     <nav class="header-controls">
@@ -90,20 +125,32 @@
       <a href="index.html" class="btn btn-outline">📅 Event Info</a>
 
       <!-- Band Member / Admin Only Controls -->
-      <a href="voting.html" id="navVotingLink" class="btn btn-outline hidden" style="border-color: var(--primary-cyan);">
+      <a href="voting.html" id="navVotingLink" class="btn btn-outline hidden">
         🗳️ Band Veto
       </a>
-      <button id="viewAsSingerBtn" type="button" onclick="toggleViewAsSinger()" class="btn btn-outline hidden" style="border-color: var(--primary-cyan);">
+      <button id="viewAsSingerBtn" type="button" onclick="toggleViewAsSinger()" class="btn btn-outline hidden">
         👁️ View as Singer: OFF
       </button>
 
       <button class="btn btn-outline" id="themeToggle" type="button">🌓 Theme</button>
     </nav>
 
+    <!-- Mode Pill + Direct Sign-In Trigger for Band/Singers -->
     <div class="flex flex-wrap items-center justify-center gap-2 text-xs mt-1">
-      <span id="queueModeBadge" class="px-3 py-1 rounded-full font-bold uppercase tracking-wider text-[11px]" style="background: rgba(76,224,228,0.15); border: 1px solid var(--primary-cyan); color: var(--primary-cyan);">
+      <span id="queueModeBadge" class="px-3 py-1 rounded-full font-bold uppercase tracking-wider text-[11px]" style="background: var(--header-pill-bg); border: 1.5px solid var(--cyan-badge-border); color: var(--header-pill-text);">
         📋 Live Singer Queue
       </span>
+      <div id="userStatusBar" class="hidden flex items-center gap-2">
+        <span class="px-3 py-1 rounded-full font-bold text-xs" style="background: var(--card-bg); color: var(--text-color); border: 1.5px solid var(--primary-pink);">
+          🎤 <span id="navPerformerName">Performer</span>
+        </span>
+        <button onclick="handleSignOut()" class="px-3 py-1 rounded-full text-xs font-semibold" style="background: var(--card-bg); color: var(--text-color); border: 1.5px solid var(--border-color);">
+          Sign Out
+        </button>
+      </div>
+      <button id="openAuthBtn" onclick="toggleAuthDrawer()" class="btn-pink text-xs">
+        🔑 Sign In (Singer / Band)
+      </button>
     </div>
   </header>
 
@@ -113,11 +160,42 @@
     <div id="toastBanner" class="hidden rounded-xl px-4 py-3 text-xs font-bold border text-center"></div>
 
     <!-- ================================================================== -->
+    <!-- COLLAPSIBLE SIGN-IN DRAWER (SO BAND CAN LOG IN DIRECTLY ON QUEUE)  -->
+    <!-- ================================================================== -->
+    <section id="authSection" class="toogin-panel p-5 max-w-md mx-auto w-full hidden space-y-3 text-xs">
+      <div class="flex items-center justify-between">
+        <div>
+          <h3 class="text-base font-extrabold" style="color: var(--primary-pink); margin-bottom: 0;">🔑 Sign In to TooginTV</h3>
+          <p class="opacity-80">Band members &amp; admins unlock live queue controls automatically.</p>
+        </div>
+        <button type="button" onclick="toggleAuthDrawer(false)" class="text-sm font-bold">✕</button>
+      </div>
+      <div class="grid grid-cols-2 gap-2">
+        <button onclick="signInWithProvider('google')" type="button"
+          class="flex items-center justify-center gap-2 bg-white hover:bg-zinc-200 text-zinc-900 font-bold py-2 px-3 rounded-xl border border-zinc-300">
+          <span>G</span> Google SSO
+        </button>
+        <button onclick="signInWithProvider('facebook')" type="button"
+          class="flex items-center justify-center gap-2 bg-[#1877F2] hover:bg-[#166fe5] text-white font-bold py-2 px-3 rounded-xl">
+          <span>f</span> Facebook SSO
+        </button>
+      </div>
+      <form onsubmit="handleEmailLogin(event)" class="space-y-2.5 pt-1">
+        <input id="loginEmail" type="email" required placeholder="Email address" class="toogin-input w-full" />
+        <input id="loginPassword" type="password" required placeholder="Password" class="toogin-input w-full" />
+        <button type="submit" class="btn-pink w-full py-2">Sign In with Email</button>
+      </form>
+      <div class="text-center pt-1">
+        <a href="karaoke.html" class="underline font-semibold" style="color: var(--cyan-text);">Need a new account or password reset? Open Song List →</a>
+      </div>
+    </section>
+
+    <!-- ================================================================== -->
     <!-- BAND-ONLY WALK-UP / MANUAL QUEUE ADD BAR                           -->
     <!-- ================================================================== -->
     <section id="bandWalkupBar" class="toogin-panel p-4 hidden space-y-2.5 text-xs">
       <div class="flex flex-wrap items-center justify-between gap-2">
-        <span class="font-extrabold uppercase tracking-wider brand-font" style="color: var(--primary-cyan);">
+        <span class="font-extrabold uppercase tracking-wider brand-font" style="color: var(--cyan-text);">
           🎸 Band / Admin Queue Deck — Add Walk-Up Singer or Clear Completed
         </span>
         <button type="button" onclick="clearCompletedItems()" class="btn-cyan text-[11px] py-1 px-3">
@@ -125,7 +203,7 @@
         </button>
       </div>
       <form onsubmit="handleManualWalkupAdd(event)" class="grid grid-cols-1 sm:grid-cols-12 gap-2">
-        <input id="walkupSingerName" type="text" required placeholder="Singer / Stage Name..." class="toogin-input sm:col-span-4 font-bold" />
+        <input id="walkupSingerName" type="text" required placeholder="Walk-Up Singer Name..." class="toogin-input sm:col-span-4 font-bold" />
         <select id="walkupSongSelect" required class="toogin-input sm:col-span-6"></select>
         <button type="submit" class="btn-pink sm:col-span-2">+ Add to Queue</button>
       </form>
@@ -149,7 +227,7 @@
     <!-- ================================================================== -->
     <section class="toogin-panel p-5 space-y-3">
       <div class="flex items-center justify-between">
-        <h2 class="text-lg sm:text-xl font-extrabold uppercase tracking-wider" style="color: var(--primary-cyan); margin-bottom: 0;">
+        <h2 class="text-lg sm:text-xl font-extrabold uppercase tracking-wider" style="color: var(--cyan-text); margin-bottom: 0;">
           ⏳ Up Next (<span id="upNextCount">0</span>)
         </h2>
         <a href="karaoke.html" class="btn-pink text-xs py-1.5 px-3.5">+ Reserve a Song</a>
@@ -158,7 +236,7 @@
     </section>
 
     <!-- ================================================================== -->
-    <!-- COMPLETED TONIGHT (BAND VIEW ONLY OR COMPACT FOOTER)               -->
+    <!-- COMPLETED TONIGHT (BAND VIEW ONLY)                                 -->
     <!-- ================================================================== -->
     <section id="completedSection" class="toogin-panel p-4 hidden space-y-2 text-xs">
       <h3 class="font-extrabold uppercase tracking-wider opacity-75">✅ Completed / Skipped Tonight (<span id="completedCount">0</span>)</h3>
@@ -174,7 +252,7 @@
     <div class="toogin-panel max-w-4xl w-full max-h-[92vh] overflow-y-auto p-5 space-y-4 text-xs" onclick="event.stopPropagation()">
       <div class="flex flex-wrap items-start justify-between gap-3 border-b pb-3" style="border-color: var(--border-color);">
         <div>
-          <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider" style="background: rgba(76,224,228,0.18); color: var(--primary-cyan); border: 1px solid var(--primary-cyan);">
+          <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider" style="background: var(--cyan-badge-bg); color: var(--cyan-text); border: 1px solid var(--cyan-badge-border);">
             🎸 Band Member Inspection &amp; Live Chart Transposer
           </span>
           <h2 id="bmTitle" class="text-xl font-extrabold mt-1" style="color: var(--primary-pink); margin-bottom: 0;">Song Title</h2>
@@ -190,7 +268,7 @@
         </div>
         <div class="toogin-subcard p-2.5">
           <div class="text-[10px] uppercase font-bold opacity-65">Toogin Preferred Key</div>
-          <div id="bmPrefKey" class="text-sm font-extrabold font-mono mt-0.5" style="color: var(--primary-cyan);">—</div>
+          <div id="bmPrefKey" class="text-sm font-extrabold font-mono mt-0.5" style="color: var(--cyan-text);">—</div>
         </div>
         <div class="toogin-subcard p-2.5">
           <div class="text-[10px] uppercase font-bold opacity-65">Guitar / Bass Tuning</div>
@@ -210,7 +288,7 @@
           <button type="button" id="bmTab_bass_img" onclick="setBandModalTab('bass_img')" class="btn-cyan">📷 Bass Scan Photo</button>
         </div>
 
-        <div class="flex flex-wrap items-center gap-2">
+        <div id="bmTransposeControls" class="flex flex-wrap items-center gap-2">
           <span class="font-bold text-[11px] uppercase opacity-80">Adjust Chart Key:</span>
           <button type="button" onclick="shiftModalSemitones(-1)" class="px-2.5 py-1 rounded-lg font-mono font-bold border" style="border-color: var(--border-color);">-1 Semi</button>
           <span id="bmSemitoneBadge" class="font-mono font-extrabold px-2 py-0.5 rounded text-xs" style="background: rgba(235,116,171,0.2); color: var(--primary-pink);">0 Semi</span>
@@ -241,7 +319,11 @@
 
   <script>
     (function initTheme() {
-      const saved = localStorage.getItem("toogintv-theme");
+      let saved = localStorage.getItem("toogintv-theme");
+      if (!saved) {
+        saved = "dark";
+        localStorage.setItem("toogintv-theme", "dark");
+      }
       if (saved === "light") document.body.classList.remove("dark-mode");
       else document.body.classList.add("dark-mode");
       const btn = document.getElementById("themeToggle");
@@ -289,8 +371,8 @@
     function showToast(msg, isError = false) {
       const el = document.getElementById("toastBanner");
       el.textContent = msg;
-      el.style.background = isError ? "rgba(185, 28, 28, 0.25)" : "rgba(76, 224, 228, 0.18)";
-      el.style.borderColor = isError ? "#ef4444" : "var(--primary-cyan)";
+      el.style.background = isError ? "rgba(185, 28, 28, 0.25)" : "var(--cyan-badge-bg)";
+      el.style.borderColor = isError ? "#ef4444" : "var(--cyan-badge-border)";
       el.classList.remove("hidden");
       clearTimeout(window._toastTimer);
       window._toastTimer = setTimeout(() => el.classList.add("hidden"), 4000);
@@ -304,6 +386,44 @@
       return isRealBandOrAdmin() && !VIEW_AS_SINGER;
     }
 
+    function isQueueItemMine(qItem) {
+      if (!CURRENT_USER || !qItem) return false;
+      if (qItem.user_id && String(qItem.user_id) === String(CURRENT_USER.id)) return true;
+      const myPerf = ((CURRENT_PROFILE && CURRENT_PROFILE.performer_name) || "").trim().toLowerCase();
+      return Boolean(myPerf && String(qItem.performer_name || "").trim().toLowerCase() === myPerf);
+    }
+
+    function toggleAuthDrawer(forceOpen) {
+      const el = document.getElementById("authSection");
+      const next = typeof forceOpen === "boolean" ? forceOpen : el.classList.contains("hidden");
+      el.classList.toggle("hidden", !next);
+    }
+
+    async function signInWithProvider(provider) {
+      const redirectTo = window.location.origin + window.location.pathname;
+      const { error } = await sb.auth.signInWithOAuth({ provider, options: { redirectTo } });
+      if (error) showToast(error.message, true);
+    }
+
+    async function handleEmailLogin(e) {
+      e.preventDefault();
+      const email = document.getElementById("loginEmail").value.trim();
+      const password = document.getElementById("loginPassword").value;
+      const { error } = await sb.auth.signInWithPassword({ email, password });
+      if (error) return showToast(error.message, true);
+      toggleAuthDrawer(false);
+      showToast("Signed in ✓");
+    }
+
+    async function handleSignOut() {
+      await sb.auth.signOut();
+      CURRENT_USER = null;
+      CURRENT_PROFILE = null;
+      VIEW_AS_SINGER = false;
+      updateHeaderControls();
+      renderQueue();
+    }
+
     function toggleViewAsSinger() {
       VIEW_AS_SINGER = !VIEW_AS_SINGER;
       updateHeaderControls();
@@ -311,6 +431,14 @@
     }
 
     function updateHeaderControls() {
+      const loggedIn = Boolean(CURRENT_USER && CURRENT_PROFILE);
+      document.getElementById("userStatusBar").classList.toggle("hidden", !loggedIn);
+      document.getElementById("openAuthBtn").classList.toggle("hidden", loggedIn);
+      if (loggedIn) {
+        document.getElementById("authSection").classList.add("hidden");
+        document.getElementById("navPerformerName").textContent = CURRENT_PROFILE.performer_name || "Singer";
+      }
+
       const realBand = isRealBandOrAdmin();
       const effectiveBand = isEffectiveBandView();
 
@@ -336,7 +464,7 @@
       const [activeRes, masterRes, qRes] = await Promise.all([
         sb.from("toogin_active_karaoke").select("*").order("song_name"),
         sb.from("toogin_jams").select("id, song_name, artist, album, duration_display, original_key, toogin_preferred_key, tuning_offset, guitar_chart_url, bass_chart_url, guitar_chart_text, bass_chart_text"),
-        sb.from("toogin_karaoke_queue").select("*").order("created_at")
+        sb.from("toogin_karaoke_queue").select("*").order("created_at", { ascending: true }).order("id", { ascending: true })
       ]);
 
       SONGS_MAP.clear();
@@ -351,11 +479,14 @@
       ACTIVE_SONGS = (activeRes.data || []).map(a => SONGS_MAP.get(Number(a.song_id)) || a);
       QUEUE_ITEMS = qRes.data || [];
 
+      // Always keep walk-up song select fresh while preserving current selection
       const sel = document.getElementById("walkupSongSelect");
-      if (sel && sel.options.length <= 1) {
+      if (sel) {
+        const prevVal = sel.value;
         const list = ACTIVE_SONGS.length ? ACTIVE_SONGS : Array.from(SONGS_MAP.values());
         sel.innerHTML = `<option value="">-- Select Song for Walk-Up Singer --</option>` +
           list.map(s => `<option value="${s.song_id}">${safeHtml(s.song_name)} — ${safeHtml(s.artist)}</option>`).join("");
+        if (prevVal) sel.value = prevVal;
       }
 
       renderQueue();
@@ -386,7 +517,7 @@
                     🎤 ${safeHtml(q.performer_name)}
                   </span>
                   ${bandMode ? `
-                    <span class="px-2.5 py-0.5 rounded font-mono text-xs font-bold" style="background: rgba(76,224,228,0.18); color: var(--primary-cyan);">
+                    <span class="px-2.5 py-0.5 rounded font-mono text-xs font-bold" style="background: var(--cyan-badge-bg); color: var(--cyan-text); border: 1px solid var(--cyan-badge-border);">
                       Key: ${safeHtml(song.toogin_preferred_key || song.original_key || "?")} • ${safeHtml(song.tuning_offset || "Eb Standard (-1)")}
                     </span>
                   ` : ""}
@@ -421,19 +552,19 @@
         nextBox.innerHTML = upNextList.map((q, idx) => {
           const song = SONGS_MAP.get(Number(q.song_id)) || {};
           const qid = safeJsArg(q.id);
-          const isMine = CURRENT_USER && String(q.user_id) === String(CURRENT_USER.id);
+          const isMine = isQueueItemMine(q);
 
           return `
             <div class="toogin-subcard p-3.5 flex flex-wrap items-center justify-between gap-3">
               <div class="flex items-center gap-3">
-                <div class="w-9 h-9 rounded-full flex items-center justify-center font-extrabold font-mono text-sm shrink-0" style="background: rgba(76,224,228,0.18); color: var(--primary-cyan); border: 1.5px solid var(--primary-cyan);">
+                <div class="w-9 h-9 rounded-full flex items-center justify-center font-extrabold font-mono text-sm shrink-0" style="background: var(--cyan-badge-bg); color: var(--cyan-text); border: 1.5px solid var(--cyan-badge-border);">
                   #${idx + 1}
                 </div>
                 <div>
                   <div class="flex flex-wrap items-center gap-2">
                     <span class="font-extrabold text-sm" style="color: var(--primary-pink);">🎤 ${safeHtml(q.performer_name)}</span>
                     ${bandMode ? `
-                      <span class="px-2 py-0.5 rounded font-mono text-[11px] font-bold" style="background: rgba(76,224,228,0.15); color: var(--primary-cyan);">
+                      <span class="px-2 py-0.5 rounded font-mono text-[11px] font-bold" style="background: var(--cyan-badge-bg); color: var(--cyan-text); border: 1px solid var(--cyan-badge-border);">
                         Key: ${safeHtml(song.toogin_preferred_key || song.original_key || "?")} • ${safeHtml(song.tuning_offset || "Eb")}
                       </span>
                     ` : ""}
@@ -448,7 +579,7 @@
                   <button type="button" onclick="sendToStage('${qid}')" class="btn-pink py-1 px-3 text-[11px]">🔥 Send to Stage</button>
                   <button type="button" onclick="moveQueueItem(${idx}, -1)" ${idx === 0 ? 'disabled' : ''} class="px-2 py-1 rounded border text-xs font-bold disabled:opacity-30" style="border-color: var(--border-color);" title="Move Up">▲</button>
                   <button type="button" onclick="moveQueueItem(${idx}, 1)" ${idx === upNextList.length - 1 ? 'disabled' : ''} class="px-2 py-1 rounded border text-xs font-bold disabled:opacity-30" style="border-color: var(--border-color);" title="Move Down">▼</button>
-                  <button type="button" onclick="setQueueStatus('${qid}', 'completed')" class="px-2.5 py-1 rounded border text-xs font-bold text-emerald-400 border-emerald-500/40">✓ Done</button>
+                  <button type="button" onclick="setQueueStatus('${qid}', 'completed')" class="px-2.5 py-1 rounded border text-xs font-bold text-emerald-500 border-emerald-500/40">✓ Done</button>
                   <button type="button" onclick="deleteQueueRow('${qid}')" class="px-2 py-1 rounded border text-xs font-bold text-red-400 border-red-500/40" title="Remove">✕</button>
                 ` : (isMine ? `
                   <button type="button" onclick="deleteQueueRow('${qid}')" class="px-3 py-1 rounded-full text-xs font-bold text-red-400 border border-red-500/40">
@@ -490,7 +621,6 @@
     // BAND QUEUE CONTROL ACTIONS
     // ========================================================================
     async function sendToStage(queueId) {
-      // Automatically mark any currently on_stage song as completed first
       const currentOnStage = QUEUE_ITEMS.filter(q => q.status === "on_stage" && String(q.id) !== String(queueId));
       for (const cur of currentOnStage) {
         await sb.from("toogin_karaoke_queue").update({ status: "completed" }).eq("id", cur.id);
@@ -513,13 +643,20 @@
 
       const itemA = upNextList[upNextIdx];
       const itemB = upNextList[targetIdx];
-      const timeA = itemA.created_at;
-      const timeB = itemB.created_at;
+      let timeA = new Date(itemA.created_at).getTime();
+      let timeB = new Date(itemB.created_at).getTime();
 
-      // Swap created_at timestamps so ordering updates cleanly
+      // Guarantee distinct timestamps even if two rows were inserted in the same millisecond
+      if (timeA === timeB) {
+        timeB = timeA + (direction > 0 ? 1000 : -1000);
+      }
+
+      const isoNewA = new Date(timeB).toISOString();
+      const isoNewB = new Date(timeA).toISOString();
+
       await Promise.all([
-        sb.from("toogin_karaoke_queue").update({ created_at: timeB }).eq("id", itemA.id),
-        sb.from("toogin_karaoke_queue").update({ created_at: timeA }).eq("id", itemB.id)
+        sb.from("toogin_karaoke_queue").update({ created_at: isoNewA }).eq("id", itemA.id),
+        sb.from("toogin_karaoke_queue").update({ created_at: isoNewB }).eq("id", itemB.id)
       ]);
       await loadQueueData();
     }
@@ -543,9 +680,16 @@
       const songId = document.getElementById("walkupSongSelect").value;
       if (!name || !songId) return;
 
+      // Look up if the walk-up singer has an existing profile; otherwise leave user_id null (never attach the Band Member's own user_id!)
+      const { data: matchedProfile } = await sb
+        .from("toogin_profiles")
+        .select("id")
+        .ilike("performer_name", name)
+        .maybeSingle();
+
       const { error } = await sb.from("toogin_karaoke_queue").insert({
         song_id: Number(songId),
-        user_id: CURRENT_USER ? CURRENT_USER.id : null,
+        user_id: matchedProfile ? matchedProfile.id : null,
         performer_name: name,
         status: "queued"
       });
@@ -670,12 +814,15 @@
         if (btn) btn.className = (t === MODAL_TAB) ? "btn-pink" : "btn-cyan";
       }
 
+      const isImgTab = (MODAL_TAB === "guitar_img" || MODAL_TAB === "bass_img");
+      document.getElementById("bmTransposeControls").classList.toggle("hidden", isImgTab);
+
       const sign = MODAL_SEMITONE_SHIFT > 0 ? `+${MODAL_SEMITONE_SHIFT}` : `${MODAL_SEMITONE_SHIFT}`;
       document.getElementById("bmSemitoneBadge").textContent = `${sign} Semi`;
 
       const vp = document.getElementById("bmChartViewport");
 
-      if (MODAL_TAB === "guitar_img" || MODAL_TAB === "bass_img") {
+      if (isImgTab) {
         const imgUrl = MODAL_TAB === "bass_img" ? s.bass_chart_url : s.guitar_chart_url;
         if (!imgUrl) {
           vp.innerHTML = `<div class="py-12 text-center opacity-70">No scanned chart photo uploaded for this instrument yet.</div>`;
@@ -707,7 +854,7 @@
         }).join("");
         return `
           <div class="toogin-panel p-3.5 space-y-1.5">
-            <div class="text-xs font-extrabold uppercase tracking-wider" style="color: var(--primary-cyan);">${safeHtml(sec.name || "Section")}</div>
+            <div class="text-xs font-extrabold uppercase tracking-wider" style="color: var(--cyan-text);">${safeHtml(sec.name || "Section")}</div>
             <div>${linesHtml}</div>
           </div>
         `;
@@ -716,7 +863,7 @@
       vp.innerHTML = `
         <div class="space-y-3">
           <div class="flex flex-wrap items-center justify-between gap-2 text-xs font-mono border-b pb-2" style="border-color: var(--border-color);">
-            <span>Written Chart Key: <strong>${safeHtml(baseWrittenKey || "?")}</strong> → Displaying in Key: <strong style="color: var(--primary-cyan); font-size: 0.95rem;">${safeHtml(effectiveKey)}</strong></span>
+            <span>Written Chart Key: <strong>${safeHtml(baseWrittenKey || "?")}</strong> → Displaying in Key: <strong style="color: var(--cyan-text); font-size: 0.95rem;">${safeHtml(effectiveKey)}</strong></span>
             ${chartObj.cam_tuning_note ? `<span>Cam's Sheet Note: <strong style="color: var(--primary-pink);">${safeHtml(chartObj.cam_tuning_note)}</strong></span>` : ""}
           </div>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">

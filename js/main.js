@@ -20,7 +20,7 @@ function switchTab(tabName) {
     event.target.classList.add('active');
     document.getElementById(`tab-${tabName}`).classList.add('active');
 
-    if (tabName === 'tiktok' && typeof tiktokEmbed !== 'undefined') {
+    if (tabName === 'tiktok' && !document.querySelector('script[src*="tiktok.com/embed.js"]')) {
         const script = document.createElement('script');
         script.src = "https://www.tiktok.com/embed.js";
         script.async = true;

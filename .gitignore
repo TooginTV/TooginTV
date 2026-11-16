@@ -3,3 +3,10 @@
 
 # GitHub App credentials
 gha-creds-*.json
+
+# Local Admin & Secrets
+.env
+.env.*
+toogin_stage_admin*.html
+tooginjams*.html
+Buildweb.sh
