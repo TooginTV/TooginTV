@@ -272,6 +272,7 @@
     <!-- ================================================================== -->
     <!-- SONG CARDS GRID                                                    -->
     <!-- ================================================================== -->
+    <div id="emptySongsNotice" class="hidden toogin-panel p-12 text-center opacity-75">No songs match your search.</div>
     <section id="songsGrid" class="grid grid-cols-1 md:grid-cols-2 gap-3.5"></section>
 
   </main>
@@ -694,55 +695,88 @@
     }
 
     // ========================================================================
-    // SPOTIFY HELPER
+    // EMBEDDED SPOTIFY PLAYER HELPER & DOM CACHE
     // ========================================================================
+    const CARD_DOM_CACHE = new Map();
+
     function extractSpotifyId(uriOrUrl) {
       const s = String(uriOrUrl || "").trim();
       if (!s) return "";
-      if (s.includes("spotify:track:")) return s.split("spotify:track:")[1].split("?")[0];
-      if (s.includes("open.spotify.com/track/")) return s.split("open.spotify.com/track/")[1].split("?")[0].split("/")[0];
+      if (s.includes("spotify:track:")) return s.split("spotify:track:")[1].split("?")[0].trim();
+      if (s.includes("open.spotify.com/track/")) return s.split("open.spotify.com/track/")[1].split("?")[0].split("/")[0].trim();
       if (/^[a-zA-Z0-9]{22}$/.test(s)) return s;
       return "";
     }
 
-    function playInSpotify(uriOrUrl, songName, artistName) {
-      const trackId = extractSpotifyId(uriOrUrl);
+    function renderEmbeddedSpotifyHtml(song) {
+      const trackId = extractSpotifyId(song.spotify_uri);
       if (trackId) {
-        document.getElementById("spotifyBar").classList.remove("hidden");
-        document.getElementById("spotifyIframe").src = `https://open.spotify.com/embed/track/${trackId}?utm_source=generator&theme=0`;
-        document.getElementById("spotifyAppLink").href = `spotify:track:${trackId}`;
-      } else {
-        const query = encodeURIComponent(`${songName || ""} ${artistName || ""}`.trim());
-        window.open(`https://open.spotify.com/search/${query}`, "_blank", "noopener");
+        return `
+          <div class="pt-1">
+            <iframe
+              src="https://open.spotify.com/embed/track/${safeHtml(trackId)}?utm_source=generator&theme=0"
+              width="100%"
+              height="80"
+              frameBorder="0"
+              allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+              loading="lazy"
+              class="w-full h-20 rounded-xl border"
+              style="border-color: var(--border-color); background: #111111;">
+            </iframe>
+          </div>
+        `;
       }
+      const searchUrl = `https://open.spotify.com/search/${encodeURIComponent(`${song.song_name || ""} ${song.artist || ""}`.trim())}`;
+      return `
+        <div class="toogin-subcard p-2.5 flex items-center justify-between gap-2 text-xs">
+          <span class="opacity-70 italic">No Spotify Track URI linked yet</span>
+          <a href="${safeHtml(searchUrl)}" target="_blank" rel="noopener" class="btn-cyan py-1 px-3 text-[11px]">
+            🔍 Search on Spotify ↗
+          </a>
+        </div>
+      `;
     }
 
     // ========================================================================
-    // DATA LOADING (ACTIVE KARAOKE + MASTER METADATA MERGE + QUEUE)
+    // DATA LOADING (ACTIVE KARAOKE + MASTER METADATA + VETO NOTES + QUEUE)
     // ========================================================================
     async function loadKaraokeData() {
-      const [activeRes, masterRes, queueRes] = await Promise.all([
+      const [activeRes, masterRes, queueRes, vetoRes] = await Promise.all([
         sb.from("toogin_active_karaoke").select("*").order("song_name"),
         sb.from("toogin_jams").select("id, spotify_uri, album, duration_display, original_key, toogin_preferred_key, tuning_offset, guitar_chart_url, bass_chart_url, guitar_chart_text, bass_chart_text"),
-        sb.from("toogin_karaoke_queue").select("*").order("created_at", { ascending: true }).order("id", { ascending: true })
+        sb.from("toogin_karaoke_queue").select("*").order("created_at", { ascending: true }).order("id", { ascending: true }),
+        sb.from("toogin_veto_votes").select("*")
       ]);
 
       const masterMap = new Map((masterRes.data || []).map(m => [Number(m.id), m]));
+      const vetoesBySong = new Map();
+      for (const v of (vetoRes.data || [])) {
+        const sid = Number(v.song_id);
+        if (!vetoesBySong.has(sid)) vetoesBySong.set(sid, []);
+        const label = v.note ? `${v.performer_name} ("${v.note}")` : v.performer_name;
+        vetoesBySong.get(sid).push(label);
+      }
+
       const rawActive = activeRes.data || [];
 
       ACTIVE_SONGS = rawActive.map(s => {
-        const m = masterMap.get(Number(s.song_id)) || {};
+        const sid = Number(s.song_id);
+        const m = masterMap.get(sid) || {};
+        const liveVetoLabels = vetoesBySong.get(sid);
         return {
           ...m,
           ...s,
           spotify_uri: s.spotify_uri || m.spotify_uri || "",
+          album: s.album || m.album || "",
+          duration_display: s.duration_display || m.duration_display || "",
           original_key: s.original_key || m.original_key || "",
           toogin_preferred_key: s.toogin_preferred_key || m.toogin_preferred_key || "",
           tuning_offset: s.tuning_offset || m.tuning_offset || "Eb Standard (-1)",
           guitar_chart_url: s.guitar_chart_url || m.guitar_chart_url || "",
           bass_chart_url: s.bass_chart_url || m.bass_chart_url || "",
           guitar_chart_text: s.guitar_chart_text || m.guitar_chart_text || "",
-          bass_chart_text: s.bass_chart_text || m.bass_chart_text || ""
+          bass_chart_text: s.bass_chart_text || m.bass_chart_text || "",
+          vetoed_by: (liveVetoLabels && liveVetoLabels.length) ? liveVetoLabels : (Array.isArray(s.vetoed_by) ? s.vetoed_by : [])
         };
       });
 
@@ -850,6 +884,86 @@
       renderSongs();
     }
 
+    function buildKaraokeCardDynamicHtml(s, qItem, wasPlayed, bandMode, myActiveCount) {
+      const sid = Number(s.song_id);
+      const origKey = s.original_key || "Standard";
+      const albumMeta = [s.album, s.duration_display].filter(Boolean).join(" • ");
+
+      let reserveBtnHtml = "";
+      if (qItem) {
+        const isMine = isQueueItemMine(qItem);
+        if (qItem.status === "on_stage") {
+          reserveBtnHtml = `<button type="button" disabled class="btn-pink w-full">🔥 On Stage (${safeHtml(qItem.performer_name)})</button>`;
+        } else if (isMine) {
+          reserveBtnHtml = `<button type="button" onclick="cancelMyQueueItem('${safeJsArg(qItem.id)}')" class="btn-cyan w-full">⏳ Reserved by You (Cancel ✕)</button>`;
+        } else {
+          reserveBtnHtml = `<button type="button" disabled class="btn-pink w-full">⏳ Queued (${safeHtml(qItem.performer_name)})</button>`;
+        }
+      } else {
+        const limitReached = CURRENT_USER && myActiveCount >= MAX_SINGER_QUEUE;
+        reserveBtnHtml = `
+          <button type="button" onclick="reserveSong(${sid})" ${limitReached ? 'disabled title="Max 3 songs reserved"' : ''} class="btn-pink w-full">
+            🎤 ${limitReached ? 'Max 3 Reserved' : 'Reserve This Song'}
+          </button>
+        `;
+      }
+
+      let bandControlsHtml = "";
+      if (bandMode) {
+        const vetoInfo = Array.isArray(s.vetoed_by) && s.vetoed_by.length
+          ? `<span class="px-2 py-0.5 rounded text-[11px] font-bold bg-amber-950/80 text-amber-300 border border-amber-500/40">⚠️ Vetoed by: ${safeHtml(s.vetoed_by.join(", "))}</span>`
+          : "";
+        bandControlsHtml = `
+          <div class="toogin-subcard p-2.5 mt-2 flex flex-wrap items-center justify-between gap-2 text-[11px]">
+            <div class="flex flex-wrap items-center gap-1.5 font-mono">
+              <span class="px-2 py-0.5 rounded font-bold" style="background: var(--cyan-badge-bg); color: var(--cyan-badge-text); border: 1px solid var(--cyan-badge-border);">
+                Toogin Key: ${safeHtml(s.toogin_preferred_key || origKey)}
+              </span>
+              <span class="px-2 py-0.5 rounded font-bold" style="background: rgba(235,116,171,0.15); color: var(--primary-pink);">
+                ${safeHtml(s.tuning_offset || "Eb Standard (-1)")}
+              </span>
+              ${vetoInfo}
+            </div>
+            <button type="button" onclick="openBandModal(${sid})" class="btn-cyan text-[11px] py-1 px-3">
+              🎸 Band Chart &amp; Info
+            </button>
+          </div>
+        `;
+      }
+
+      return `
+        <div class="space-y-2">
+          <div class="flex items-start justify-between gap-2">
+            <div>
+              <h3 class="text-base font-extrabold leading-snug" style="color: var(--primary-pink);">${safeHtml(s.song_name)}</h3>
+              <p class="text-xs font-bold opacity-85">
+                ${safeHtml(s.artist)}${albumMeta ? ` <span class="font-normal opacity-75">• ${safeHtml(albumMeta)}</span>` : ""}
+              </p>
+            </div>
+            <div class="flex items-center gap-1.5 shrink-0">
+              ${wasPlayed ? `<span class="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-950 text-emerald-300 border border-emerald-500/40">✓ Played Tonight</span>` : ""}
+              <span class="px-2.5 py-1 rounded-lg text-xs font-mono font-extrabold" style="background: var(--subcard-bg); border: 1px solid var(--border-color);">
+                Orig Key: ${safeHtml(origKey)}
+              </span>
+            </div>
+          </div>
+
+          <!-- End-User Greyed-Out Song Key Dropdown -->
+          <div class="pt-1">
+            <select disabled class="toogin-input w-full text-xs opacity-60 cursor-not-allowed" title="Available key options will be confirmed with the band">
+              <option>Song Key Option: Original Key (${safeHtml(origKey)}) — Custom Keys TBD</option>
+            </select>
+          </div>
+
+          ${bandControlsHtml}
+
+          <div class="pt-1">
+            ${reserveBtnHtml}
+          </div>
+        </div>
+      `;
+    }
+
     function renderSongs() {
       const q = (document.getElementById("searchInput").value || "").toLowerCase().trim();
       const bandMode = isEffectiveBandView();
@@ -881,111 +995,51 @@
         if (btn) btn.className = (f === SONG_FILTER) ? "btn-pink" : "btn-cyan";
       }
 
-      const filtered = ACTIVE_SONGS.filter(s => {
-        const sid = Number(s.song_id);
-        const inQ = activeQueueBySong.has(sid);
-        if (SONG_FILTER === "available" && inQ) return false;
-        if (SONG_FILTER === "queued" && !inQ) return false;
-
-        if (q) {
-          const hay = `${s.song_name || ""} ${s.artist || ""} ${s.original_key || ""} ${s.toogin_preferred_key || ""}`.toLowerCase();
-          if (!hay.includes(q)) return false;
-        }
-        return true;
-      });
-
       const grid = document.getElementById("songsGrid");
-      if (!filtered.length) {
-        grid.innerHTML = `<div class="col-span-full toogin-panel p-12 text-center opacity-75">No songs match your search.</div>`;
-        return;
-      }
+      let visibleCount = 0;
 
-      grid.innerHTML = filtered.map(s => {
+      for (const s of ACTIVE_SONGS) {
         const sid = Number(s.song_id);
         const qItem = activeQueueBySong.get(sid);
+        const inQ = Boolean(qItem);
         const wasPlayed = completedSongs.has(sid);
-        const origKey = s.original_key || "Standard";
 
-        let reserveBtnHtml = "";
-        if (qItem) {
-          const isMine = isQueueItemMine(qItem);
-          if (qItem.status === "on_stage") {
-            reserveBtnHtml = `<button type="button" disabled class="btn-pink">🔥 On Stage (${safeHtml(qItem.performer_name)})</button>`;
-          } else if (isMine) {
-            reserveBtnHtml = `<button type="button" onclick="cancelMyQueueItem('${safeJsArg(qItem.id)}')" class="btn-cyan">⏳ Reserved by You (Cancel ✕)</button>`;
-          } else {
-            reserveBtnHtml = `<button type="button" disabled class="btn-pink">⏳ Queued (${safeHtml(qItem.performer_name)})</button>`;
-          }
+        let matches = true;
+        if (SONG_FILTER === "available" && inQ) matches = false;
+        if (SONG_FILTER === "queued" && !inQ) matches = false;
+
+        if (matches && q) {
+          const hay = `${s.song_name || ""} ${s.artist || ""} ${s.album || ""} ${s.original_key || ""} ${s.toogin_preferred_key || ""}`.toLowerCase();
+          if (!hay.includes(q)) matches = false;
+        }
+
+        let cardEl = CARD_DOM_CACHE.get(sid);
+        if (!cardEl) {
+          cardEl = document.createElement("div");
+          cardEl.id = `karaokeCard_${sid}`;
+          cardEl.className = "toogin-panel p-4 flex flex-col justify-between gap-3";
+          cardEl.innerHTML = `
+            <div id="karaokeCardDynamic_${sid}">
+              ${buildKaraokeCardDynamicHtml(s, qItem, wasPlayed, bandMode, myActiveCount)}
+            </div>
+            <div id="karaokeCardSpotify_${sid}" class="border-t pt-2" style="border-color: var(--border-color);">
+              ${renderEmbeddedSpotifyHtml(s)}
+            </div>
+          `;
+          CARD_DOM_CACHE.set(sid, cardEl);
+          grid.appendChild(cardEl);
         } else {
-          const limitReached = CURRENT_USER && myActiveCount >= MAX_SINGER_QUEUE;
-          reserveBtnHtml = `
-            <button type="button" onclick="reserveSong(${sid})" ${limitReached ? 'disabled title="Max 3 songs reserved"' : ''} class="btn-pink">
-              🎤 ${limitReached ? 'Max 3 Reserved' : 'Reserve Song'}
-            </button>
-          `;
+          const dynEl = document.getElementById(`karaokeCardDynamic_${sid}`);
+          if (dynEl) {
+            dynEl.innerHTML = buildKaraokeCardDynamicHtml(s, qItem, wasPlayed, bandMode, myActiveCount);
+          }
         }
 
-        // Band-Only Extra Info & Modal Trigger (Hidden in Singer View)
-        let bandControlsHtml = "";
-        if (bandMode) {
-          const vetoInfo = Array.isArray(s.vetoed_by) && s.vetoed_by.length
-            ? `<span class="px-2 py-0.5 rounded text-[11px] font-bold bg-amber-950/80 text-amber-300 border border-amber-500/40">⚠️ Vetoed by: ${safeHtml(s.vetoed_by.join(", "))}</span>`
-            : "";
-          bandControlsHtml = `
-            <div class="toogin-subcard p-2.5 mt-2 flex flex-wrap items-center justify-between gap-2 text-[11px]">
-              <div class="flex flex-wrap items-center gap-1.5 font-mono">
-                <span class="px-2 py-0.5 rounded font-bold" style="background: var(--cyan-badge-bg); color: var(--cyan-badge-text); border: 1px solid var(--cyan-badge-border);">
-                  Toogin Key: ${safeHtml(s.toogin_preferred_key || origKey)}
-                </span>
-                <span class="px-2 py-0.5 rounded font-bold" style="background: rgba(235,116,171,0.15); color: var(--primary-pink);">
-                  ${safeHtml(s.tuning_offset || "Eb Standard (-1)")}
-                </span>
-                ${vetoInfo}
-              </div>
-              <button type="button" onclick="openBandModal(${sid})" class="btn-cyan text-[11px] py-1 px-3">
-                🎸 Band Chart &amp; Info
-              </button>
-            </div>
-          `;
-        }
+        cardEl.classList.toggle("hidden", !matches);
+        if (matches) visibleCount++;
+      }
 
-        return `
-          <div class="toogin-panel p-4 flex flex-col justify-between gap-3">
-            <div class="space-y-2">
-              <div class="flex items-start justify-between gap-2">
-                <div>
-                  <h3 class="text-base font-extrabold leading-snug" style="color: var(--primary-pink);">${safeHtml(s.song_name)}</h3>
-                  <p class="text-xs font-bold opacity-85">${safeHtml(s.artist)}</p>
-                </div>
-                <div class="flex items-center gap-1.5 shrink-0">
-                  ${wasPlayed ? `<span class="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-950 text-emerald-300 border border-emerald-500/40">✓ Played Tonight</span>` : ""}
-                  <span class="px-2.5 py-1 rounded-lg text-xs font-mono font-extrabold" style="background: var(--subcard-bg); border: 1px solid var(--border-color);">
-                    Orig Key: ${safeHtml(origKey)}
-                  </span>
-                </div>
-              </div>
-
-              <!-- End-User Greyed-Out Song Key Dropdown -->
-              <div class="pt-1">
-                <select disabled class="toogin-input w-full text-xs opacity-60 cursor-not-allowed" title="Available key options will be confirmed with the band">
-                  <option>Song Key Option: Original Key (${safeHtml(origKey)}) — Custom Keys TBD</option>
-                </select>
-              </div>
-
-              ${bandControlsHtml}
-            </div>
-
-            <!-- Card Footer: Play in Spotify + Reserve Song -->
-            <div class="flex flex-wrap items-center justify-between gap-2 pt-2 border-t" style="border-color: var(--border-color);">
-              <button type="button" onclick="playInSpotify('${safeJsArg(s.spotify_uri)}', '${safeJsArg(s.song_name)}', '${safeJsArg(s.artist)}')"
-                class="btn-cyan flex items-center gap-1.5">
-                ▶ Play in Spotify
-              </button>
-              ${reserveBtnHtml}
-            </div>
-          </div>
-        `;
-      }).join("");
+      document.getElementById("emptySongsNotice").classList.toggle("hidden", visibleCount > 0);
     }
 
     // ========================================================================
