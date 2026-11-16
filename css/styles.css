@@ -7,23 +7,27 @@
     --bg-color: var(--primary-cyan);
     --text-color: #222222;
     --card-bg: #ffffff;
+    --subcard-bg: #ffffff;
+    --input-bg: #f5f9fa;
     --card-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
-    --border-color: rgba(0, 0, 0, 0.1);
+    --border-color: rgba(0, 0, 0, 0.12);
 }
 
 body.dark-mode {
     --bg-color: #0d0d0d; 
     --text-color: #f5f5f5;
     --card-bg: #1a1a1a;
+    --subcard-bg: #141414;
+    --input-bg: #111111;
     --card-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
-    --border-color: rgba(255, 255, 255, 0.1);
+    --border-color: rgba(255, 255, 255, 0.12);
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
-    background-color: var(--bg-color);
-    color: var(--text-color);
+    background-color: var(--bg-color) !important;
+    color: var(--text-color) !important;
     font-family: 'Inter', sans-serif;
     transition: background-color 0.4s ease, color 0.4s ease;
     display: flex;
@@ -48,10 +52,12 @@ header {
 }
 
 .logo-img {
-    max-width: 250px;
+    max-width: 240px;
     height: auto;
-    border-radius: 8px;
-    box-shadow: var(--card-shadow);
+    background: transparent !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    filter: drop-shadow(0 6px 16px rgba(0, 0, 0, 0.35));
     transition: transform 0.3s ease;
 }
 
@@ -65,9 +71,11 @@ header {
     justify-content: center;
 }
 
-.btn {
-    background-color: var(--primary-pink);
-    color: #ffffff;
+.btn,
+button.btn,
+a.btn {
+    background-color: var(--primary-pink) !important;
+    color: #ffffff !important;
     border: none;
     padding: 0.8rem 1.5rem;
     font-family: 'Montserrat', sans-serif;
@@ -83,20 +91,29 @@ header {
     box-shadow: 0 4px 10px rgba(235, 116, 171, 0.3);
 }
 
-.btn:hover {
-    background-color: var(--pink-hover);
+.btn:hover,
+button.btn:hover,
+a.btn:hover {
+    background-color: var(--pink-hover) !important;
     transform: translateY(-2px);
     box-shadow: 0 6px 15px rgba(235, 116, 171, 0.4);
 }
 
-.btn-outline {
-    background-color: var(--card-bg);
-    border: 2px solid var(--primary-pink);
-    color: var(--text-color);
+.btn-outline,
+button.btn-outline,
+a.btn-outline {
+    background-color: var(--card-bg) !important;
+    border: 2px solid var(--primary-pink) !important;
+    color: var(--text-color) !important;
     box-shadow: var(--card-shadow);
 }
 
-.btn-outline:hover { background-color: var(--primary-pink); color: #ffffff; }
+.btn-outline:hover,
+button.btn-outline:hover,
+a.btn-outline:hover {
+    background-color: var(--primary-pink) !important;
+    color: #ffffff !important;
+}
 
 main {
     width: 100%;
@@ -107,13 +124,48 @@ main {
 }
 
 .card {
-    background-color: var(--card-bg);
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.35' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 12 -4' /%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.35'/%3E%3C/svg%3E");
+    background-color: var(--card-bg) !important;
+    color: var(--text-color) !important;
     padding: 2.5rem;
     border-radius: 16px;
     box-shadow: var(--card-shadow);
     border: 2px solid var(--border-color);
-    transition: background-color 0.4s ease, border 0.4s ease;
+    transition: background-color 0.4s ease, border 0.4s ease, color 0.4s ease;
+}
+
+body.dark-mode .card {
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.35' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 12 -4' /%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.2'/%3E%3C/svg%3E");
+}
+
+.toogin-panel {
+    background-color: var(--card-bg) !important;
+    color: var(--text-color) !important;
+    border: 2px solid var(--border-color);
+    border-radius: 16px;
+    box-shadow: var(--card-shadow);
+    transition: background-color 0.4s ease, border 0.4s ease, color 0.4s ease;
+}
+
+.toogin-subcard,
+button.toogin-subcard {
+    background-color: var(--subcard-bg) !important;
+    color: var(--text-color) !important;
+    border: 1.5px solid var(--border-color);
+    border-radius: 14px;
+    transition: background-color 0.4s ease, border 0.4s ease, color 0.4s ease;
+}
+
+.toogin-input {
+    background-color: var(--input-bg) !important;
+    color: var(--text-color) !important;
+    border: 1.5px solid var(--border-color);
+    border-radius: 12px;
+    padding: 0.6rem 0.9rem;
+}
+
+.toogin-input:focus {
+    outline: none;
+    border-color: var(--primary-pink);
 }
 
 .text-center { text-align: center; }
@@ -122,6 +174,7 @@ main {
 
 .schedule-section { text-align: center; display: flex; flex-direction: column; align-items: center; gap: 1.5rem; }
 .event-title { color: var(--primary-cyan); font-size: 1.5rem; font-family: 'Montserrat', sans-serif; text-transform: uppercase; display: block; margin-bottom: 0.5rem; }
+body:not(.dark-mode) .event-title { color: var(--primary-pink); }
 .local-time { color: #ffffff; background: #222; padding: 0.3rem 0.8rem; border-radius: 6px; font-weight: 700; display: inline-block; }
 .countdown { display: flex; gap: 1.5rem; justify-content: center; margin-top: 1rem; }
 .time-box { display: flex; flex-direction: column; align-items: center; background-color: var(--bg-color); padding: 1.2rem; border-radius: 12px; min-width: 90px; border: 2px solid rgba(235, 116, 171, 0.3); box-shadow: inset 0 2px 5px rgba(0,0,0,0.2); }

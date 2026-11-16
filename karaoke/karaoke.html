@@ -7,9 +7,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Montserrat:wght@700;800;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="../css/styles.css">
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link rel="stylesheet" href="../css/styles.css">
   <style>
     :root {
       --primary-cyan: #4ce0e4;
@@ -18,29 +18,35 @@
       --bg-color: var(--primary-cyan);
       --text-color: #222222;
       --card-bg: #ffffff;
+      --subcard-bg: #ffffff;
+      --input-bg: #f5f9fa;
       --card-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
       --border-color: rgba(0, 0, 0, 0.12);
-      --subcard-bg: #f4f8f9;
-      --cyan-text: #095d60;
-      --cyan-badge-bg: rgba(9, 93, 96, 0.12);
-      --cyan-badge-border: #0b7a7e;
+      --cyan-text: var(--primary-pink);
+      --cyan-badge-bg: var(--primary-cyan);
+      --cyan-badge-text: #111111;
+      --cyan-badge-border: var(--primary-cyan);
       --header-pill-bg: #ffffff;
-      --header-pill-text: #111111;
+      --header-pill-text: #222222;
     }
     body.dark-mode {
       --bg-color: #0d0d0d;
       --text-color: #f5f5f5;
       --card-bg: #1a1a1a;
+      --subcard-bg: #141414;
+      --input-bg: #111111;
       --card-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
       --border-color: rgba(255, 255, 255, 0.12);
-      --subcard-bg: #111111;
-      --cyan-text: #4ce0e4;
-      --cyan-badge-bg: rgba(76, 224, 228, 0.15);
-      --cyan-badge-border: #4ce0e4;
-      --header-pill-bg: rgba(76, 224, 228, 0.15);
-      --header-pill-text: #4ce0e4;
+      --cyan-text: var(--primary-cyan);
+      --cyan-badge-bg: rgba(76, 224, 228, 0.16);
+      --cyan-badge-text: var(--primary-cyan);
+      --cyan-badge-border: var(--primary-cyan);
+      --header-pill-bg: #1a1a1a;
+      --header-pill-text: var(--primary-cyan);
     }
     body {
+      background-color: var(--bg-color) !important;
+      color: var(--text-color) !important;
       padding-bottom: 7rem;
     }
     .logo-img {
@@ -56,21 +62,28 @@
       transform: translateY(-2px);
     }
     .toogin-panel {
-      background-color: var(--card-bg);
-      color: var(--text-color);
+      background-color: var(--card-bg) !important;
+      background-image: none !important;
+      color: var(--text-color) !important;
       border: 2px solid var(--border-color);
       border-radius: 16px;
       box-shadow: var(--card-shadow);
+      transition: background-color 0.4s ease, border 0.4s ease, color 0.4s ease;
     }
-    .toogin-subcard {
-      background-color: var(--subcard-bg);
-      color: var(--text-color);
+    .toogin-subcard,
+    button.toogin-subcard {
+      background-color: var(--subcard-bg) !important;
+      color: var(--text-color) !important;
       border: 1.5px solid var(--border-color);
       border-radius: 14px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+      transition: background-color 0.4s ease, border 0.4s ease, color 0.4s ease;
     }
-    .toogin-input {
-      background-color: var(--subcard-bg);
-      color: var(--text-color);
+    .toogin-input,
+    select.toogin-input,
+    input.toogin-input {
+      background-color: var(--input-bg) !important;
+      color: var(--text-color) !important;
       border: 1.5px solid var(--border-color);
       border-radius: 12px;
       padding: 0.6rem 0.9rem;
@@ -79,9 +92,11 @@
       outline: none;
       border-color: var(--primary-pink);
     }
-    .btn-cyan {
-      background-color: var(--primary-cyan);
-      color: #111111;
+    .btn-cyan,
+    button.btn-cyan,
+    a.btn-cyan {
+      background-color: var(--primary-cyan) !important;
+      color: #111111 !important;
       font-family: 'Montserrat', sans-serif;
       font-weight: 800;
       border-radius: 50px;
@@ -96,9 +111,11 @@
       filter: brightness(0.92);
       transform: translateY(-1px);
     }
-    .btn-pink {
-      background-color: var(--primary-pink);
-      color: #ffffff;
+    .btn-pink,
+    button.btn-pink,
+    a.btn-pink {
+      background-color: var(--primary-pink) !important;
+      color: #ffffff !important;
       font-family: 'Montserrat', sans-serif;
       font-weight: 800;
       border-radius: 50px;
@@ -110,7 +127,7 @@
       box-shadow: 0 4px 10px rgba(235, 116, 171, 0.3);
     }
     .btn-pink:hover:not(:disabled) {
-      background-color: var(--pink-hover);
+      background-color: var(--pink-hover) !important;
       transform: translateY(-1px);
     }
     .btn-pink:disabled {
@@ -120,7 +137,7 @@
     }
   </style>
 </head>
-<body class="dark-mode">
+<body class="">
 
   <!-- HEADER WITH RESTRICTED KARAOKE NAVIGATION -->
   <header style="margin-bottom: 1rem; padding: 1.5rem 0 1rem 0;">
@@ -266,7 +283,7 @@
       <!-- Modal Header -->
       <div class="flex flex-wrap items-start justify-between gap-3 border-b pb-3" style="border-color: var(--border-color);">
         <div>
-          <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider" style="background: var(--cyan-badge-bg); color: var(--cyan-text); border: 1px solid var(--cyan-badge-border);">
+          <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider" style="background: var(--cyan-badge-bg); color: var(--cyan-badge-text); border: 1px solid var(--cyan-badge-border);">
             🎸 Band Member Inspection &amp; Live Chart Transposer
           </span>
           <h2 id="bmTitle" class="text-xl font-extrabold mt-1" style="color: var(--primary-pink); margin-bottom: 0;">Song Title</h2>
@@ -399,15 +416,10 @@
     // THEME INITIALIZATION (SYNCED WITH LOCALSTORAGE)
     // ========================================================================
     (function initTheme() {
-      let saved = localStorage.getItem("toogintv-theme");
-      if (!saved) {
-        saved = "dark";
-        localStorage.setItem("toogintv-theme", "dark");
-      }
-      if (saved === "light") {
-        document.body.classList.remove("dark-mode");
-      } else {
+      if (localStorage.getItem("toogintv-theme") === "dark") {
         document.body.classList.add("dark-mode");
+      } else {
+        document.body.classList.remove("dark-mode");
       }
       const btn = document.getElementById("themeToggle");
       if (btn) {
@@ -777,7 +789,7 @@
         return `
           <div class="toogin-subcard p-3 flex items-center justify-between gap-2">
             <div>
-              <span class="text-[10px] font-mono uppercase px-2 py-0.5 rounded font-bold" style="background: ${isStage ? 'var(--primary-pink)' : 'var(--cyan-badge-bg)'}; color: ${isStage ? '#fff' : 'var(--cyan-text)'}; border: 1px solid ${isStage ? 'var(--primary-pink)' : 'var(--cyan-badge-border)'};">
+              <span class="text-[10px] font-mono uppercase px-2 py-0.5 rounded font-bold" style="background: ${isStage ? 'var(--primary-pink)' : 'var(--cyan-badge-bg)'}; color: ${isStage ? '#fff' : 'var(--cyan-badge-text)'}; border: 1px solid ${isStage ? 'var(--primary-pink)' : 'var(--cyan-badge-border)'};">
                 ${posLabel}
               </span>
               <div class="font-extrabold mt-1">${safeHtml(song.song_name || 'Song #' + q.song_id)}</div>
@@ -921,7 +933,7 @@
           bandControlsHtml = `
             <div class="toogin-subcard p-2.5 mt-2 flex flex-wrap items-center justify-between gap-2 text-[11px]">
               <div class="flex flex-wrap items-center gap-1.5 font-mono">
-                <span class="px-2 py-0.5 rounded font-bold" style="background: var(--cyan-badge-bg); color: var(--cyan-text); border: 1px solid var(--cyan-badge-border);">
+                <span class="px-2 py-0.5 rounded font-bold" style="background: var(--cyan-badge-bg); color: var(--cyan-badge-text); border: 1px solid var(--cyan-badge-border);">
                   Toogin Key: ${safeHtml(s.toogin_preferred_key || origKey)}
                 </span>
                 <span class="px-2 py-0.5 rounded font-bold" style="background: rgba(235,116,171,0.15); color: var(--primary-pink);">
