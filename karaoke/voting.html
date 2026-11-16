@@ -379,7 +379,7 @@
     }
 
     function safeJsArg(str) {
-      return String(str ?? "").replace(/\/g, "\\").replace(/'/g, "\'");
+      return String(str ?? "").replace(/\\/g, "\\\\").replace(/'/g, "\\'");
     }
 
     function extractSpotifyId(uriOrUrl) {
