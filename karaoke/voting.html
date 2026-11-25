@@ -14,6 +14,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Montserrat:wght@700;800;900&display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://open.spotify.com/embed/iframe-api/v1" async></script>
   <link rel="stylesheet" href="../css/styles.css">
   <style>
     :root {
@@ -52,7 +53,7 @@
     body {
       background-color: var(--bg-color) !important;
       color: var(--text-color) !important;
-      padding-bottom: 5rem;
+      padding-bottom: 8.5rem;
     }
     .logo-img {
       max-width: 210px;
@@ -139,6 +140,91 @@
       opacity: 0.45;
       cursor: not-allowed;
       box-shadow: none;
+    }
+    /* Monolithic List View & Single Spotify Player */
+    .monolith-list {
+      padding: 0 !important;
+      overflow: hidden;
+    }
+    .monolith-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      padding: 0.65rem 1rem;
+      background: var(--subcard-bg);
+      border-bottom: 2px solid var(--border-color);
+      font-family: 'Montserrat', sans-serif;
+      font-size: 0.68rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      opacity: 0.85;
+    }
+    .monolith-row {
+      position: relative;
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid var(--border-color);
+      border-left: 4px solid transparent;
+      transition: background-color 0.16s ease, border-left-color 0.16s ease;
+    }
+    .monolith-row:last-child {
+      border-bottom: none;
+    }
+    .monolith-row:nth-child(even) {
+      background-color: rgba(128, 128, 128, 0.035);
+    }
+    .monolith-row:hover {
+      background-color: rgba(76, 224, 228, 0.08);
+    }
+    body.dark-mode .monolith-row:hover {
+      background-color: rgba(235, 116, 171, 0.07);
+    }
+    .monolith-row.is-previewing {
+      border-left-color: var(--primary-pink);
+      background-color: rgba(235, 116, 171, 0.11) !important;
+    }
+    .play-trigger {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      font-size: 0.9rem;
+      font-weight: 800;
+      border: 1.5px solid var(--border-color);
+      background-color: var(--subcard-bg);
+      color: var(--text-color);
+      transition: all 0.18s ease;
+      cursor: pointer;
+    }
+    .play-trigger:hover {
+      border-color: #1DB954;
+      color: #1DB954;
+      transform: scale(1.04);
+    }
+    .play-trigger.is-active {
+      background-color: var(--primary-pink) !important;
+      border-color: var(--primary-pink) !important;
+      color: #ffffff !important;
+      box-shadow: 0 0 12px rgba(235, 116, 171, 0.45);
+    }
+    .play-trigger.is-search {
+      opacity: 0.7;
+      font-size: 0.8rem;
+      text-decoration: none;
+    }
+    .play-trigger.is-search:hover {
+      opacity: 1;
+      border-color: var(--primary-cyan);
+      color: var(--cyan-text);
+    }
+    .spotify-dock {
+      background: var(--card-bg);
+      border-top: 2px solid var(--primary-pink);
+      box-shadow: 0 -8px 28px rgba(0, 0, 0, 0.35);
     }
   </style>
 </head>
@@ -241,14 +327,10 @@
         <p class="text-xs opacity-80">2 vetoes pulls a song from the upcoming show • Leave optional notes when vetoing</p>
       </div>
 
-      <div class="grid grid-cols-2 gap-2.5 text-xs">
+      <div class="text-xs">
         <button onclick="signInWithProvider('google')" type="button"
-          class="flex items-center justify-center gap-2 bg-white hover:bg-zinc-200 text-zinc-900 font-bold py-2.5 px-3 rounded-xl border border-zinc-300 transition">
-          <span>G</span> Google SSO
-        </button>
-        <button onclick="signInWithProvider('facebook')" type="button"
-          class="flex items-center justify-center gap-2 bg-[#1877F2] hover:bg-[#166fe5] text-white font-bold py-2.5 px-3 rounded-xl transition">
-          <span>f</span> Facebook SSO
+          class="w-full flex items-center justify-center gap-2 bg-white hover:bg-zinc-200 text-zinc-900 font-bold py-2.5 px-3 rounded-xl border border-zinc-300 transition">
+          <span>G</span> Sign in with Google
         </button>
       </div>
 
@@ -337,11 +419,47 @@
         No songs match this filter.
       </div>
 
-      <!-- Song Cards List (DOM-Cached so Embedded Spotify Players never reload on filter/veto) -->
-      <div id="songsList" class="space-y-3"></div>
+      <!-- Monolithic Voting Pool List (Single Shared Spotify Dock below) -->
+      <div id="votingMonolith" class="toogin-panel monolith-list">
+        <div class="monolith-header">
+          <div class="flex items-center gap-3">
+            <span>🗳️ Voting Pool</span>
+            <span id="visiblePoolMeta" class="font-mono font-normal opacity-75"></span>
+          </div>
+          <span class="hidden sm:inline opacity-75">Click ▶ to preview in bottom player</span>
+        </div>
+        <div id="songsList"></div>
+      </div>
     </section>
 
   </main>
+
+  <!-- ==================================================================== -->
+  <!-- SINGLE SHARED STICKY SPOTIFY PLAYER BAR (ZERO 429 RATE-LIMITING)     -->
+  <!-- ==================================================================== -->
+  <div id="spotifyBar" class="hidden fixed bottom-0 inset-x-0 z-40 px-3 py-2.5 spotify-dock">
+    <div class="max-w-5xl mx-auto space-y-1.5">
+      <div class="flex items-center justify-between gap-2 text-xs">
+        <div class="flex items-center gap-2 min-w-0">
+          <span class="px-2 py-0.5 rounded-full text-[10px] font-mono font-extrabold uppercase shrink-0"
+            style="background: rgba(29, 185, 84, 0.18); color: #1DB954; border: 1px solid rgba(29, 185, 84, 0.45);">
+            ♫ Preview
+          </span>
+          <span id="spotifyNowTitle" class="font-extrabold truncate" style="color: var(--primary-pink);"></span>
+          <span id="spotifyNowArtist" class="opacity-75 truncate hidden sm:inline"></span>
+        </div>
+        <div class="flex items-center gap-1.5 shrink-0">
+          <a id="spotifyAppLink" href="#" target="_blank" rel="noopener" class="btn-cyan text-[10px] px-2.5 py-1">
+            Open in Spotify ↗
+          </a>
+          <button type="button" onclick="closeSpotifyPlayer()" class="btn-pink text-[10px] px-2.5 py-1" title="Close Player">
+            ✕ Close
+          </button>
+        </div>
+      </div>
+      <div id="spotifyMount" class="w-full min-h-[80px] rounded-xl overflow-hidden bg-[#111111]"></div>
+    </div>
+  </div>
 
   <script>
     (function initTheme() {
@@ -370,8 +488,7 @@
     let VETO_VOTES = [];
     let CURRENT_FILTER = "all";
 
-    // Cache card DOM elements by song_id so embedded Spotify iframes never reload when filtering or toggling vetoes
-    const CARD_DOM_CACHE = new Map();
+
 
     function safeHtml(str) {
       return String(str ?? "")
@@ -386,6 +503,25 @@
       return String(str ?? "").replace(/\\/g, "\\\\").replace(/'/g, "\\'");
     }
 
+    // ========================================================================
+    // SINGLE SHARED SPOTIFY PREVIEW PLAYER (ELIMINATES 429 RATE-LIMITING)
+    // ========================================================================
+    let SPOTIFY_IFRAME_API = null;
+    let SPOTIFY_CONTROLLER = null;
+    let SPOTIFY_IS_PLAYING = false;
+    let ACTIVE_PREVIEW_SONG_ID = null;
+    let ACTIVE_PREVIEW_TRACK_ID = null;
+    let PENDING_SPOTIFY_TRACK = null;
+
+    window.onSpotifyIframeApiReady = (IFrameAPI) => {
+      SPOTIFY_IFRAME_API = IFrameAPI;
+      if (PENDING_SPOTIFY_TRACK) {
+        const nextTrack = PENDING_SPOTIFY_TRACK;
+        PENDING_SPOTIFY_TRACK = null;
+        mountSpotifyController(nextTrack);
+      }
+    };
+
     function extractSpotifyId(uriOrUrl) {
       const s = String(uriOrUrl || "").trim();
       if (!s) return "";
@@ -395,32 +531,166 @@
       return "";
     }
 
-    function renderEmbeddedSpotifyHtml(song) {
+    function mountSpotifyController(trackId) {
+      const mount = document.getElementById("spotifyMount");
+      if (!mount || !SPOTIFY_IFRAME_API) return;
+      mount.innerHTML = `<div id="spotifyControllerHost"></div>`;
+      const host = document.getElementById("spotifyControllerHost");
+      SPOTIFY_IFRAME_API.createController(
+        host,
+        { width: "100%", height: 80, uri: `spotify:track:${trackId}` },
+        (controller) => {
+          SPOTIFY_CONTROLLER = controller;
+          controller.addListener("playback_update", (e) => {
+            SPOTIFY_IS_PLAYING = Boolean(e && e.data && !e.data.isPaused);
+            syncPreviewRowStates();
+          });
+          controller.play();
+        }
+      );
+    }
+
+    function loadTrackInSinglePlayer(trackId) {
+      const uri = `spotify:track:${trackId}`;
+      if (SPOTIFY_CONTROLLER) {
+        if (typeof SPOTIFY_CONTROLLER.loadEntity === "function") {
+          SPOTIFY_CONTROLLER.loadEntity(uri);
+        } else {
+          SPOTIFY_CONTROLLER.loadUri(uri);
+        }
+        SPOTIFY_CONTROLLER.play();
+        return;
+      }
+      if (SPOTIFY_IFRAME_API) {
+        mountSpotifyController(trackId);
+        return;
+      }
+      // Fallback if Spotify IFrame API script has not loaded yet or is blocked
+      PENDING_SPOTIFY_TRACK = null;
+      const mount = document.getElementById("spotifyMount");
+      if (!mount) return;
+      let iframe = document.getElementById("spotifyFallbackIframe");
+      const embedUrl = `https://open.spotify.com/embed/track/${encodeURIComponent(trackId)}?utm_source=generator&theme=0`;
+      if (!iframe) {
+        mount.innerHTML = `
+          <iframe
+            id="spotifyFallbackIframe"
+            src="${embedUrl}"
+            width="100%"
+            height="80"
+            frameBorder="0"
+            allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+            class="w-full h-20 rounded-xl block">
+          </iframe>
+        `;
+      } else {
+        iframe.src = embedUrl;
+      }
+    }
+
+    function syncPreviewRowStates() {
+      document.querySelectorAll(".monolith-row.is-previewing").forEach(el => el.classList.remove("is-previewing"));
+      document.querySelectorAll(".play-trigger.is-active").forEach(btn => {
+        btn.classList.remove("is-active");
+        btn.textContent = "▶";
+        btn.setAttribute("aria-label", "Preview on Spotify");
+        btn.title = "Preview on Spotify";
+      });
+
+      if (ACTIVE_PREVIEW_SONG_ID === null) return;
+      const activeRow = document.getElementById(`poolRow_${ACTIVE_PREVIEW_SONG_ID}`);
+      if (activeRow) activeRow.classList.add("is-previewing");
+      const activeBtn = document.getElementById(`playBtn_${ACTIVE_PREVIEW_SONG_ID}`);
+      if (activeBtn) {
+        activeBtn.classList.add("is-active");
+        activeBtn.textContent = SPOTIFY_IS_PLAYING ? "❚❚" : "♫";
+        activeBtn.setAttribute("aria-label", SPOTIFY_IS_PLAYING ? "Pause preview" : "Resume preview");
+        activeBtn.title = SPOTIFY_IS_PLAYING ? "Pause preview" : "Resume preview";
+      }
+    }
+
+    function previewSong(songId) {
+      const sid = Number(songId);
+      const song = POOL_SONGS.find(x => Number(x.song_id) === sid);
+      if (!song) return;
+
       const trackId = extractSpotifyId(song.spotify_uri);
+      if (!trackId) {
+        const searchUrl = `https://open.spotify.com/search/${encodeURIComponent(`${song.song_name || ""} ${song.artist || ""}`.trim())}`;
+        window.open(searchUrl, "_blank", "noopener");
+        return;
+      }
+
+      const bar = document.getElementById("spotifyBar");
+      if (bar) bar.classList.remove("hidden");
+
+      // Clicking the currently loaded song toggles play/pause without re-fetching Spotify
+      if (ACTIVE_PREVIEW_SONG_ID === sid && ACTIVE_PREVIEW_TRACK_ID === trackId) {
+        if (SPOTIFY_CONTROLLER && typeof SPOTIFY_CONTROLLER.togglePlay === "function") {
+          SPOTIFY_CONTROLLER.togglePlay();
+        }
+        syncPreviewRowStates();
+        return;
+      }
+
+      ACTIVE_PREVIEW_SONG_ID = sid;
+      ACTIVE_PREVIEW_TRACK_ID = trackId;
+      SPOTIFY_IS_PLAYING = true;
+
+      const titleEl = document.getElementById("spotifyNowTitle");
+      const artistEl = document.getElementById("spotifyNowArtist");
+      const linkEl = document.getElementById("spotifyAppLink");
+      if (titleEl) titleEl.textContent = song.song_name || "Track Preview";
+      if (artistEl) artistEl.textContent = song.artist ? `— ${song.artist}` : "";
+      if (linkEl) linkEl.href = `https://open.spotify.com/track/${encodeURIComponent(trackId)}`;
+
+      loadTrackInSinglePlayer(trackId);
+      syncPreviewRowStates();
+    }
+
+    function closeSpotifyPlayer() {
+      if (SPOTIFY_CONTROLLER && typeof SPOTIFY_CONTROLLER.pause === "function") {
+        SPOTIFY_CONTROLLER.pause();
+      }
+      const fallback = document.getElementById("spotifyFallbackIframe");
+      if (fallback) fallback.src = "about:blank";
+      const bar = document.getElementById("spotifyBar");
+      if (bar) bar.classList.add("hidden");
+      ACTIVE_PREVIEW_SONG_ID = null;
+      ACTIVE_PREVIEW_TRACK_ID = null;
+      SPOTIFY_IS_PLAYING = false;
+      syncPreviewRowStates();
+    }
+
+    function buildPlayTriggerHtml(song) {
+      const sid = Number(song.song_id);
+      const trackId = extractSpotifyId(song.spotify_uri);
+      const isActive = ACTIVE_PREVIEW_SONG_ID === sid;
       if (trackId) {
+        const icon = isActive ? (SPOTIFY_IS_PLAYING ? "❚❚" : "♫") : "▶";
         return `
-          <div class="pt-1">
-            <iframe
-              src="https://open.spotify.com/embed/track/${safeHtml(trackId)}?utm_source=generator&theme=0"
-              width="100%"
-              height="80"
-              frameBorder="0"
-              allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-              loading="lazy"
-              class="w-full h-20 rounded-xl border"
-              style="border-color: var(--border-color); background: #111111;">
-            </iframe>
-          </div>
+          <button
+            id="playBtn_${sid}"
+            type="button"
+            onclick="previewSong(${sid})"
+            class="play-trigger ${isActive ? 'is-active' : ''}"
+            aria-label="Preview ${safeHtml(song.song_name)} on Spotify"
+            title="Preview on Spotify">
+            ${icon}
+          </button>
         `;
       }
       const searchUrl = `https://open.spotify.com/search/${encodeURIComponent(`${song.song_name || ""} ${song.artist || ""}`.trim())}`;
       return `
-        <div class="toogin-subcard p-2.5 flex items-center justify-between gap-2 text-xs">
-          <span class="opacity-70 italic">No Spotify Track URI linked yet</span>
-          <a href="${safeHtml(searchUrl)}" target="_blank" rel="noopener" class="btn-cyan py-1 px-3 text-[11px]">
-            🔍 Search on Spotify ↗
-          </a>
-        </div>
+        <a
+          href="${safeHtml(searchUrl)}"
+          target="_blank"
+          rel="noopener"
+          class="play-trigger is-search"
+          aria-label="Search ${safeHtml(song.song_name)} on Spotify"
+          title="No Spotify URI linked — search on Spotify">
+          🔍
+        </a>
       `;
     }
 
@@ -782,7 +1052,7 @@
       document.getElementById("chartLightbox").classList.add("hidden");
     }
 
-    function buildSongCardDynamicHtml(s) {
+    function buildPoolRowInnerHtml(s) {
       const sid = Number(s.song_id);
       const vetoes = getVetoesForSong(sid);
       const vCount = vetoes.length;
@@ -791,11 +1061,11 @@
       const myNote = myVeto && myVeto.note ? String(myVeto.note) : "";
       const canVeto = isUserBandOrAdmin();
 
-      let statusPill = `<span class="px-2.5 py-0.5 rounded-full text-[11px] font-mono bg-emerald-950 text-emerald-300 border border-emerald-500/40">✅ 0/2 IN SHOW</span>`;
+      let statusPill = `<span class="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-950 text-emerald-300 border border-emerald-500/40">✅ 0/2 IN SHOW</span>`;
       if (vCount === 1) {
-        statusPill = `<span class="px-2.5 py-0.5 rounded-full text-[11px] font-mono bg-amber-950 text-amber-300 border border-amber-500/40">⚠️ 1/2 (1 MORE PULLS IT)</span>`;
+        statusPill = `<span class="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-amber-950 text-amber-300 border border-amber-500/40">⚠️ 1/2 BUBBLE</span>`;
       } else if (vCount >= 2) {
-        statusPill = `<span class="px-2.5 py-0.5 rounded-full text-[11px] font-mono bg-red-950 text-red-300 border border-red-500/40">🚫 ${vCount}/2 PULLED FROM SHOW</span>`;
+        statusPill = `<span class="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-red-950 text-red-300 border border-red-500/40">🚫 ${vCount}/2 PULLED</span>`;
       }
 
       const vetoChips = vetoes.length
@@ -804,70 +1074,75 @@
               ? `<span class="font-normal italic text-amber-200 ml-1">— "${safeHtml(v.note)}"</span>`
               : "";
             return `
-              <span class="inline-flex flex-wrap items-center gap-1 px-3 py-1 rounded-xl text-xs font-bold bg-red-950/90 text-red-200 border border-red-500/50">
+              <span class="inline-flex flex-wrap items-center gap-1 px-2.5 py-0.5 rounded-lg text-[11px] font-bold bg-red-950/90 text-red-200 border border-red-500/50">
                 <span>🚫 ${safeHtml(v.performer_name)}</span>${noteBadge}
               </span>
             `;
           }).join("")
-        : `<span class="text-xs opacity-60 italic">No vetoes yet — clear to play</span>`;
+        : `<span class="text-[11px] opacity-60 italic">No vetoes yet — clear to play</span>`;
 
       const chartButtons = `
-        ${s.guitar_chart_url ? `<button type="button" onclick="openChartLightbox('${safeJsArg(s.guitar_chart_url)}', '${safeJsArg(s.song_name)} — Guitar Chart')" class="btn-cyan py-0.5 px-2.5 text-[11px]">🎸 Guitar Chart</button>` : ""}
-        ${s.bass_chart_url ? `<button type="button" onclick="openChartLightbox('${safeJsArg(s.bass_chart_url)}', '${safeJsArg(s.song_name)} — Bass Chart')" class="btn-cyan py-0.5 px-2.5 text-[11px]">🎸 Bass Chart</button>` : ""}
+        ${s.guitar_chart_url ? `<button type="button" onclick="openChartLightbox('${safeJsArg(s.guitar_chart_url)}', '${safeJsArg(s.song_name)} — Guitar Chart')" class="btn-cyan py-0.5 px-2 text-[10px]">🎸 Guitar</button>` : ""}
+        ${s.bass_chart_url ? `<button type="button" onclick="openChartLightbox('${safeJsArg(s.bass_chart_url)}', '${safeJsArg(s.song_name)} — Bass Chart')" class="btn-cyan py-0.5 px-2 text-[10px]">🎸 Bass</button>` : ""}
       `;
 
       const albumMeta = [s.album, s.duration_display].filter(Boolean).join(" • ");
 
       let bandVetoControlsHtml = "";
       if (canVeto) {
-        let actionBtnLabel = "🚫 Veto This Song";
+        let actionBtnLabel = "🚫 Veto";
         let btnCls = "btn-pink";
         if (iVetoed) {
-          actionBtnLabel = "↩ Undo My Veto";
+          actionBtnLabel = "↩ Undo Veto";
           btnCls = "btn-cyan";
         } else if (vCount >= 2) {
-          actionBtnLabel = "➕ Pile On My Veto";
+          actionBtnLabel = "➕ Pile On";
           btnCls = "btn-pink";
         }
 
         bandVetoControlsHtml = `
-          <div class="toogin-subcard p-2.5 mt-2 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2 text-xs">
+          <div class="mt-2 ml-0 sm:ml-[50px] flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2 text-xs">
             <input
               id="vetoNote_${sid}"
               type="text"
               value="${safeHtml(myNote)}"
               placeholder="${iVetoed ? 'Update your veto note...' : 'Optional veto note (e.g. wrong version, key, solo)...'}"
               onkeydown="if(event.key==='Enter'){event.preventDefault(); ${iVetoed ? `saveMyVetoNote(${sid})` : `toggleMyVeto(${sid})`};}"
-              class="toogin-input text-xs flex-1"
+              class="toogin-input text-xs py-1.5 flex-1"
             />
             <div class="flex items-center justify-end gap-1.5 shrink-0">
-              ${iVetoed ? `<button type="button" onclick="saveMyVetoNote(${sid})" class="btn-pink">💾 Save Note</button>` : ""}
-              <button type="button" onclick="toggleMyVeto(${sid})" class="${btnCls}">${actionBtnLabel}</button>
+              ${iVetoed ? `<button type="button" onclick="saveMyVetoNote(${sid})" class="btn-pink text-[11px] py-1.5 px-3">💾 Save Note</button>` : ""}
+              <button type="button" onclick="toggleMyVeto(${sid})" class="${btnCls} text-[11px] py-1.5 px-3">${actionBtnLabel}</button>
             </div>
           </div>
         `;
       }
 
       return `
-        <div class="space-y-2">
-          <div class="flex flex-wrap items-center justify-between gap-2">
-            <div class="flex flex-wrap items-center gap-2">
-              ${statusPill}
-              <span class="font-mono text-xs px-2.5 py-0.5 rounded font-bold" style="background: var(--subcard-bg); border: 1px solid var(--border-color);">
+        <div class="space-y-1.5">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div class="flex items-center gap-3 min-w-0 flex-1">
+              ${buildPlayTriggerHtml(s)}
+              <div class="min-w-0 flex-1">
+                <div class="flex flex-wrap items-center gap-1.5">
+                  <h3 class="text-sm sm:text-[15px] font-extrabold leading-tight truncate" style="color: var(--primary-pink);">${safeHtml(s.song_name)}</h3>
+                  ${statusPill}
+                </div>
+                <p class="text-xs font-semibold opacity-80 truncate mt-0.5">
+                  ${safeHtml(s.artist)}${albumMeta ? ` <span class="font-normal opacity-65">• ${safeHtml(albumMeta)}</span>` : ""}
+                </p>
+              </div>
+            </div>
+
+            <div class="flex flex-wrap items-center gap-1.5 shrink-0 pl-[50px] sm:pl-0">
+              <span class="font-mono text-[11px] px-2 py-0.5 rounded font-bold" style="background: var(--subcard-bg); border: 1px solid var(--border-color);">
                 Key: ${safeHtml(s.toogin_preferred_key || s.original_key || "?")} • ${safeHtml(s.tuning_offset || "Eb Standard (-1)")}
               </span>
               ${chartButtons}
             </div>
           </div>
 
-          <div>
-            <h3 class="text-base font-extrabold leading-snug" style="color: var(--primary-pink);">${safeHtml(s.song_name)}</h3>
-            <p class="text-xs font-bold opacity-80">
-              ${safeHtml(s.artist)}${albumMeta ? ` <span class="font-normal opacity-75">• ${safeHtml(albumMeta)}</span>` : ""}
-            </p>
-          </div>
-
-          <div class="flex flex-wrap items-center gap-1.5 pt-0.5">
+          <div class="flex flex-wrap items-center gap-1.5 pl-0 sm:pl-[50px]">
             <span class="text-[11px] opacity-70 font-semibold mr-1">Vetoes:</span>
             ${vetoChips}
           </div>
@@ -903,60 +1178,59 @@
       const q = (document.getElementById("searchInput").value || "").toLowerCase().trim();
       const listEl = document.getElementById("songsList");
 
-      let visibleCount = 0;
+      // Preserve any note currently being typed if a realtime refresh fires
+      let focusedSongId = null;
+      let focusedVal = null;
+      let focusedSelStart = null;
+      if (document.activeElement && document.activeElement.id && document.activeElement.id.startsWith("vetoNote_")) {
+        focusedSongId = document.activeElement.id.replace("vetoNote_", "");
+        focusedVal = document.activeElement.value;
+        focusedSelStart = document.activeElement.selectionStart;
+      }
 
+      const rowsHtml = [];
       for (const s of POOL_SONGS) {
         const sid = Number(s.song_id);
         const vetoes = getVetoesForSong(sid);
         const c = vetoes.length;
 
-        let matches = true;
-        if (CURRENT_FILTER === "safe" && c !== 0) matches = false;
-        if (CURRENT_FILTER === "warn" && c !== 1) matches = false;
-        if (CURRENT_FILTER === "pulled" && c < 2) matches = false;
-        if (CURRENT_FILTER === "mine" && !hasUserVetoed(vetoes)) matches = false;
+        if (CURRENT_FILTER === "safe" && c !== 0) continue;
+        if (CURRENT_FILTER === "warn" && c !== 1) continue;
+        if (CURRENT_FILTER === "pulled" && c < 2) continue;
+        if (CURRENT_FILTER === "mine" && !hasUserVetoed(vetoes)) continue;
 
-        if (matches && q) {
+        if (q) {
           const vetoNamesAndNotes = vetoes.map(v => `${v.performer_name || ""} ${v.note || ""}`).join(" ").toLowerCase();
           const hay = `${s.song_name || ""} ${s.artist || ""} ${s.album || ""} ${s.toogin_preferred_key || ""} ${s.tuning_offset || ""} ${vetoNamesAndNotes}`.toLowerCase();
-          if (!hay.includes(q)) matches = false;
+          if (!hay.includes(q)) continue;
         }
 
-        let cardEl = CARD_DOM_CACHE.get(sid);
-        if (!cardEl) {
-          cardEl = document.createElement("div");
-          cardEl.id = `poolCard_${sid}`;
-          cardEl.className = "toogin-panel p-4 flex flex-col gap-3";
-          cardEl.innerHTML = `
-            <div id="poolCardDynamic_${sid}">
-              ${buildSongCardDynamicHtml(s)}
-            </div>
-            <div id="poolCardSpotify_${sid}">
-              ${renderEmbeddedSpotifyHtml(s)}
-            </div>
-          `;
-          CARD_DOM_CACHE.set(sid, cardEl);
-          listEl.appendChild(cardEl);
-        } else {
-          // Preserve any text currently being typed in the note input if focused
-          const existingInput = document.getElementById(`vetoNote_${sid}`);
-          const isFocused = existingInput && document.activeElement === existingInput;
-          const typedVal = isFocused ? existingInput.value : null;
-
-          const dynEl = document.getElementById(`poolCardDynamic_${sid}`);
-          if (dynEl && !isFocused) {
-            dynEl.innerHTML = buildSongCardDynamicHtml(s);
-            if (typedVal !== null) {
-              const newInput = document.getElementById(`vetoNote_${sid}`);
-              if (newInput) newInput.value = typedVal;
-            }
-          }
-        }
-
-        cardEl.classList.toggle("hidden", !matches);
-        if (matches) visibleCount++;
+        const isPreviewing = ACTIVE_PREVIEW_SONG_ID === sid;
+        rowsHtml.push(`
+          <div id="poolRow_${sid}" class="monolith-row ${isPreviewing ? 'is-previewing' : ''}">
+            ${buildPoolRowInnerHtml(s)}
+          </div>
+        `);
       }
 
+      listEl.innerHTML = rowsHtml.join("");
+
+      if (focusedSongId !== null) {
+        const restored = document.getElementById(`vetoNote_${focusedSongId}`);
+        if (restored) {
+          restored.value = focusedVal;
+          restored.focus();
+          if (typeof focusedSelStart === "number") {
+            restored.setSelectionRange(focusedSelStart, focusedSelStart);
+          }
+        }
+      }
+
+      const visibleCount = rowsHtml.length;
+      const metaEl = document.getElementById("visiblePoolMeta");
+      if (metaEl) metaEl.textContent = `(${visibleCount} of ${POOL_SONGS.length})`;
+
+      document.getElementById("votingMonolith").classList.toggle("hidden", visibleCount === 0);
       document.getElementById("emptyFilterNotice").classList.toggle("hidden", visibleCount > 0);
     }
 

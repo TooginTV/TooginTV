@@ -14,6 +14,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Montserrat:wght@700;800;900&display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://open.spotify.com/embed/iframe-api/v1" async></script>
   <link rel="stylesheet" href="../css/styles.css">
   <style>
     :root {
@@ -52,7 +53,7 @@
     body {
       background-color: var(--bg-color) !important;
       color: var(--text-color) !important;
-      padding-bottom: 7rem;
+      padding-bottom: 8.5rem;
     }
     .logo-img {
       max-width: 210px;
@@ -140,6 +141,91 @@
       cursor: not-allowed;
       box-shadow: none;
     }
+    /* Monolithic List View & Single Spotify Player */
+    .monolith-list {
+      padding: 0 !important;
+      overflow: hidden;
+    }
+    .monolith-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      padding: 0.65rem 1rem;
+      background: var(--subcard-bg);
+      border-bottom: 2px solid var(--border-color);
+      font-family: 'Montserrat', sans-serif;
+      font-size: 0.68rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      opacity: 0.85;
+    }
+    .monolith-row {
+      position: relative;
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid var(--border-color);
+      border-left: 4px solid transparent;
+      transition: background-color 0.16s ease, border-left-color 0.16s ease;
+    }
+    .monolith-row:last-child {
+      border-bottom: none;
+    }
+    .monolith-row:nth-child(even) {
+      background-color: rgba(128, 128, 128, 0.035);
+    }
+    .monolith-row:hover {
+      background-color: rgba(76, 224, 228, 0.08);
+    }
+    body.dark-mode .monolith-row:hover {
+      background-color: rgba(235, 116, 171, 0.07);
+    }
+    .monolith-row.is-previewing {
+      border-left-color: var(--primary-pink);
+      background-color: rgba(235, 116, 171, 0.11) !important;
+    }
+    .play-trigger {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      font-size: 0.9rem;
+      font-weight: 800;
+      border: 1.5px solid var(--border-color);
+      background-color: var(--subcard-bg);
+      color: var(--text-color);
+      transition: all 0.18s ease;
+      cursor: pointer;
+    }
+    .play-trigger:hover {
+      border-color: #1DB954;
+      color: #1DB954;
+      transform: scale(1.04);
+    }
+    .play-trigger.is-active {
+      background-color: var(--primary-pink) !important;
+      border-color: var(--primary-pink) !important;
+      color: #ffffff !important;
+      box-shadow: 0 0 12px rgba(235, 116, 171, 0.45);
+    }
+    .play-trigger.is-search {
+      opacity: 0.7;
+      font-size: 0.8rem;
+      text-decoration: none;
+    }
+    .play-trigger.is-search:hover {
+      opacity: 1;
+      border-color: var(--primary-cyan);
+      color: var(--cyan-text);
+    }
+    .spotify-dock {
+      background: var(--card-bg);
+      border-top: 2px solid var(--primary-pink);
+      box-shadow: 0 -8px 28px rgba(0, 0, 0, 0.35);
+    }
   </style>
 </head>
 <body class="">
@@ -199,14 +285,10 @@
         <button onclick="toggleAuthDrawer(false)" class="text-sm font-bold opacity-70 hover:opacity-100">✕</button>
       </div>
 
-      <div class="grid grid-cols-2 gap-2.5 text-xs">
+      <div class="text-xs">
         <button onclick="signInWithProvider('google')" type="button"
-          class="flex items-center justify-center gap-2 bg-white hover:bg-zinc-200 text-zinc-900 font-bold py-2.5 px-3 rounded-xl border border-zinc-300 transition">
-          <span>G</span> Google SSO
-        </button>
-        <button onclick="signInWithProvider('facebook')" type="button"
-          class="flex items-center justify-center gap-2 bg-[#1877F2] hover:bg-[#166fe5] text-white font-bold py-2.5 px-3 rounded-xl transition">
-          <span>f</span> Facebook SSO
+          class="w-full flex items-center justify-center gap-2 bg-white hover:bg-zinc-200 text-zinc-900 font-bold py-2.5 px-3 rounded-xl border border-zinc-300 transition">
+          <span>G</span> Sign in with Google
         </button>
       </div>
 
@@ -274,10 +356,22 @@
     </section>
 
     <!-- ================================================================== -->
-    <!-- SONG CARDS GRID                                                    -->
+    <!-- MONOLITHIC SONG CATALOG LIST                                       -->
     <!-- ================================================================== -->
     <div id="emptySongsNotice" class="hidden toogin-panel p-12 text-center opacity-75">No songs match your search.</div>
-    <section id="songsGrid" class="grid grid-cols-1 md:grid-cols-2 gap-3.5"></section>
+    <section id="songsMonolith" class="toogin-panel monolith-list">
+      <div class="monolith-header">
+        <div class="flex items-center gap-3">
+          <span>♫ Song Catalog</span>
+          <span id="visibleSongsMeta" class="font-mono font-normal opacity-75"></span>
+        </div>
+        <div class="hidden sm:flex items-center gap-6">
+          <span>Orig Key</span>
+          <span class="w-40 text-right">Queue Action</span>
+        </div>
+      </div>
+      <div id="songsGrid"></div>
+    </section>
 
   </main>
 
@@ -405,15 +499,29 @@
   </div>
 
   <!-- ==================================================================== -->
-  <!-- STICKY BOTTOM SPOTIFY PLAYER BAR                                     -->
+  <!-- SINGLE SHARED STICKY SPOTIFY PLAYER BAR (ZERO 429 RATE-LIMITING)     -->
   <!-- ==================================================================== -->
-  <div id="spotifyBar" class="hidden fixed bottom-0 inset-x-0 z-40 p-2 border-t-2" style="background: var(--card-bg); border-color: var(--primary-pink);">
-    <div class="max-w-5xl mx-auto flex items-center justify-between gap-3">
-      <iframe id="spotifyIframe" class="w-full h-20 rounded-xl" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>
-      <div class="flex flex-col gap-1 shrink-0">
-        <a id="spotifyAppLink" href="#" target="_blank" rel="noopener" class="btn-pink text-[11px] px-3 py-1.5 text-center">Open in Spotify ↗</a>
-        <button type="button" onclick="document.getElementById('spotifyBar').classList.add('hidden')" class="btn-cyan text-[11px] px-3 py-1">Hide Player</button>
+  <div id="spotifyBar" class="hidden fixed bottom-0 inset-x-0 z-40 px-3 py-2.5 spotify-dock">
+    <div class="max-w-5xl mx-auto space-y-1.5">
+      <div class="flex items-center justify-between gap-2 text-xs">
+        <div class="flex items-center gap-2 min-w-0">
+          <span class="px-2 py-0.5 rounded-full text-[10px] font-mono font-extrabold uppercase shrink-0"
+            style="background: rgba(29, 185, 84, 0.18); color: #1DB954; border: 1px solid rgba(29, 185, 84, 0.45);">
+            ♫ Preview
+          </span>
+          <span id="spotifyNowTitle" class="font-extrabold truncate" style="color: var(--primary-pink);"></span>
+          <span id="spotifyNowArtist" class="opacity-75 truncate hidden sm:inline"></span>
+        </div>
+        <div class="flex items-center gap-1.5 shrink-0">
+          <a id="spotifyAppLink" href="#" target="_blank" rel="noopener" class="btn-cyan text-[10px] px-2.5 py-1">
+            Open in Spotify ↗
+          </a>
+          <button type="button" onclick="closeSpotifyPlayer()" class="btn-pink text-[10px] px-2.5 py-1" title="Close Player">
+            ✕ Close
+          </button>
+        </div>
       </div>
+      <div id="spotifyMount" class="w-full min-h-[80px] rounded-xl overflow-hidden bg-[#111111]"></div>
     </div>
   </div>
 
@@ -699,9 +807,23 @@
     }
 
     // ========================================================================
-    // EMBEDDED SPOTIFY PLAYER HELPER & DOM CACHE
+    // SINGLE SHARED SPOTIFY PREVIEW PLAYER (ELIMINATES 429 RATE-LIMITING)
     // ========================================================================
-    const CARD_DOM_CACHE = new Map();
+    let SPOTIFY_IFRAME_API = null;
+    let SPOTIFY_CONTROLLER = null;
+    let SPOTIFY_IS_PLAYING = false;
+    let ACTIVE_PREVIEW_SONG_ID = null;
+    let ACTIVE_PREVIEW_TRACK_ID = null;
+    let PENDING_SPOTIFY_TRACK = null;
+
+    window.onSpotifyIframeApiReady = (IFrameAPI) => {
+      SPOTIFY_IFRAME_API = IFrameAPI;
+      if (PENDING_SPOTIFY_TRACK) {
+        const nextTrack = PENDING_SPOTIFY_TRACK;
+        PENDING_SPOTIFY_TRACK = null;
+        mountSpotifyController(nextTrack);
+      }
+    };
 
     function extractSpotifyId(uriOrUrl) {
       const s = String(uriOrUrl || "").trim();
@@ -712,32 +834,166 @@
       return "";
     }
 
-    function renderEmbeddedSpotifyHtml(song) {
+    function mountSpotifyController(trackId) {
+      const mount = document.getElementById("spotifyMount");
+      if (!mount || !SPOTIFY_IFRAME_API) return;
+      mount.innerHTML = `<div id="spotifyControllerHost"></div>`;
+      const host = document.getElementById("spotifyControllerHost");
+      SPOTIFY_IFRAME_API.createController(
+        host,
+        { width: "100%", height: 80, uri: `spotify:track:${trackId}` },
+        (controller) => {
+          SPOTIFY_CONTROLLER = controller;
+          controller.addListener("playback_update", (e) => {
+            SPOTIFY_IS_PLAYING = Boolean(e && e.data && !e.data.isPaused);
+            syncPreviewRowStates();
+          });
+          controller.play();
+        }
+      );
+    }
+
+    function loadTrackInSinglePlayer(trackId) {
+      const uri = `spotify:track:${trackId}`;
+      if (SPOTIFY_CONTROLLER) {
+        if (typeof SPOTIFY_CONTROLLER.loadEntity === "function") {
+          SPOTIFY_CONTROLLER.loadEntity(uri);
+        } else {
+          SPOTIFY_CONTROLLER.loadUri(uri);
+        }
+        SPOTIFY_CONTROLLER.play();
+        return;
+      }
+      if (SPOTIFY_IFRAME_API) {
+        mountSpotifyController(trackId);
+        return;
+      }
+      // Fallback if Spotify IFrame API script has not loaded yet or is blocked
+      PENDING_SPOTIFY_TRACK = null;
+      const mount = document.getElementById("spotifyMount");
+      if (!mount) return;
+      let iframe = document.getElementById("spotifyFallbackIframe");
+      const embedUrl = `https://open.spotify.com/embed/track/${encodeURIComponent(trackId)}?utm_source=generator&theme=0`;
+      if (!iframe) {
+        mount.innerHTML = `
+          <iframe
+            id="spotifyFallbackIframe"
+            src="${embedUrl}"
+            width="100%"
+            height="80"
+            frameBorder="0"
+            allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+            class="w-full h-20 rounded-xl block">
+          </iframe>
+        `;
+      } else {
+        iframe.src = embedUrl;
+      }
+    }
+
+    function syncPreviewRowStates() {
+      document.querySelectorAll(".monolith-row.is-previewing").forEach(el => el.classList.remove("is-previewing"));
+      document.querySelectorAll(".play-trigger.is-active").forEach(btn => {
+        btn.classList.remove("is-active");
+        btn.textContent = "▶";
+        btn.setAttribute("aria-label", "Preview on Spotify");
+        btn.title = "Preview on Spotify";
+      });
+
+      if (ACTIVE_PREVIEW_SONG_ID === null) return;
+      const activeRow = document.getElementById(`karaokeRow_${ACTIVE_PREVIEW_SONG_ID}`);
+      if (activeRow) activeRow.classList.add("is-previewing");
+      const activeBtn = document.getElementById(`playBtn_${ACTIVE_PREVIEW_SONG_ID}`);
+      if (activeBtn) {
+        activeBtn.classList.add("is-active");
+        activeBtn.textContent = SPOTIFY_IS_PLAYING ? "❚❚" : "♫";
+        activeBtn.setAttribute("aria-label", SPOTIFY_IS_PLAYING ? "Pause preview" : "Resume preview");
+        activeBtn.title = SPOTIFY_IS_PLAYING ? "Pause preview" : "Resume preview";
+      }
+    }
+
+    function previewSong(songId) {
+      const sid = Number(songId);
+      const song = ACTIVE_SONGS.find(x => Number(x.song_id) === sid);
+      if (!song) return;
+
       const trackId = extractSpotifyId(song.spotify_uri);
+      if (!trackId) {
+        const searchUrl = `https://open.spotify.com/search/${encodeURIComponent(`${song.song_name || ""} ${song.artist || ""}`.trim())}`;
+        window.open(searchUrl, "_blank", "noopener");
+        return;
+      }
+
+      const bar = document.getElementById("spotifyBar");
+      if (bar) bar.classList.remove("hidden");
+
+      // Clicking the currently loaded song toggles play/pause without re-fetching Spotify
+      if (ACTIVE_PREVIEW_SONG_ID === sid && ACTIVE_PREVIEW_TRACK_ID === trackId) {
+        if (SPOTIFY_CONTROLLER && typeof SPOTIFY_CONTROLLER.togglePlay === "function") {
+          SPOTIFY_CONTROLLER.togglePlay();
+        }
+        syncPreviewRowStates();
+        return;
+      }
+
+      ACTIVE_PREVIEW_SONG_ID = sid;
+      ACTIVE_PREVIEW_TRACK_ID = trackId;
+      SPOTIFY_IS_PLAYING = true;
+
+      const titleEl = document.getElementById("spotifyNowTitle");
+      const artistEl = document.getElementById("spotifyNowArtist");
+      const linkEl = document.getElementById("spotifyAppLink");
+      if (titleEl) titleEl.textContent = song.song_name || "Track Preview";
+      if (artistEl) artistEl.textContent = song.artist ? `— ${song.artist}` : "";
+      if (linkEl) linkEl.href = `https://open.spotify.com/track/${encodeURIComponent(trackId)}`;
+
+      loadTrackInSinglePlayer(trackId);
+      syncPreviewRowStates();
+    }
+
+    function closeSpotifyPlayer() {
+      if (SPOTIFY_CONTROLLER && typeof SPOTIFY_CONTROLLER.pause === "function") {
+        SPOTIFY_CONTROLLER.pause();
+      }
+      const fallback = document.getElementById("spotifyFallbackIframe");
+      if (fallback) fallback.src = "about:blank";
+      const bar = document.getElementById("spotifyBar");
+      if (bar) bar.classList.add("hidden");
+      ACTIVE_PREVIEW_SONG_ID = null;
+      ACTIVE_PREVIEW_TRACK_ID = null;
+      SPOTIFY_IS_PLAYING = false;
+      syncPreviewRowStates();
+    }
+
+    function buildPlayTriggerHtml(song) {
+      const sid = Number(song.song_id);
+      const trackId = extractSpotifyId(song.spotify_uri);
+      const isActive = ACTIVE_PREVIEW_SONG_ID === sid;
       if (trackId) {
+        const icon = isActive ? (SPOTIFY_IS_PLAYING ? "❚❚" : "♫") : "▶";
         return `
-          <div class="pt-1">
-            <iframe
-              src="https://open.spotify.com/embed/track/${safeHtml(trackId)}?utm_source=generator&theme=0"
-              width="100%"
-              height="80"
-              frameBorder="0"
-              allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-              loading="lazy"
-              class="w-full h-20 rounded-xl border"
-              style="border-color: var(--border-color); background: #111111;">
-            </iframe>
-          </div>
+          <button
+            id="playBtn_${sid}"
+            type="button"
+            onclick="previewSong(${sid})"
+            class="play-trigger ${isActive ? 'is-active' : ''}"
+            aria-label="Preview ${safeHtml(song.song_name)} on Spotify"
+            title="Preview on Spotify">
+            ${icon}
+          </button>
         `;
       }
       const searchUrl = `https://open.spotify.com/search/${encodeURIComponent(`${song.song_name || ""} ${song.artist || ""}`.trim())}`;
       return `
-        <div class="toogin-subcard p-2.5 flex items-center justify-between gap-2 text-xs">
-          <span class="opacity-70 italic">No Spotify Track URI linked yet</span>
-          <a href="${safeHtml(searchUrl)}" target="_blank" rel="noopener" class="btn-cyan py-1 px-3 text-[11px]">
-            🔍 Search on Spotify ↗
-          </a>
-        </div>
+        <a
+          href="${safeHtml(searchUrl)}"
+          target="_blank"
+          rel="noopener"
+          class="play-trigger is-search"
+          aria-label="Search ${safeHtml(song.song_name)} on Spotify"
+          title="No Spotify URI linked — search on Spotify">
+          🔍
+        </a>
       `;
     }
 
@@ -888,37 +1144,42 @@
       renderSongs();
     }
 
-    function buildKaraokeCardDynamicHtml(s, qItem, wasPlayed, bandMode, myActiveCount) {
+    function buildKaraokeRowHtml(s, qItem, wasPlayed, bandMode, myActiveCount) {
       const sid = Number(s.song_id);
       const origKey = s.original_key || "Standard";
       const albumMeta = [s.album, s.duration_display].filter(Boolean).join(" • ");
+      const isPreviewing = ACTIVE_PREVIEW_SONG_ID === sid;
 
       let reserveBtnHtml = "";
+      let statusInlineBadge = "";
       if (qItem) {
         const isMine = isQueueItemMine(qItem);
         if (qItem.status === "on_stage") {
-          reserveBtnHtml = `<button type="button" disabled class="btn-pink w-full">🔥 On Stage (${safeHtml(qItem.performer_name)})</button>`;
+          statusInlineBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold" style="background: rgba(235,116,171,0.2); color: var(--primary-pink); border: 1px solid var(--primary-pink);">🔥 On Stage: ${safeHtml(qItem.performer_name)}</span>`;
+          reserveBtnHtml = `<button type="button" disabled class="btn-pink text-[11px] py-1.5 px-3.5 w-full sm:w-40 text-center">🔥 On Stage</button>`;
         } else if (isMine) {
-          reserveBtnHtml = `<button type="button" onclick="cancelMyQueueItem('${safeJsArg(qItem.id)}')" class="btn-cyan w-full">⏳ Reserved by You (Cancel ✕)</button>`;
+          statusInlineBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold" style="background: var(--cyan-badge-bg); color: var(--cyan-badge-text); border: 1px solid var(--cyan-badge-border);">⏳ Your Pick</span>`;
+          reserveBtnHtml = `<button type="button" onclick="cancelMyQueueItem('${safeJsArg(qItem.id)}')" class="btn-cyan text-[11px] py-1.5 px-3.5 w-full sm:w-40 text-center">✕ Cancel Pick</button>`;
         } else {
-          reserveBtnHtml = `<button type="button" disabled class="btn-pink w-full">⏳ Queued (${safeHtml(qItem.performer_name)})</button>`;
+          statusInlineBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold opacity-80" style="background: var(--subcard-bg); border: 1px solid var(--border-color);">⏳ Queued: ${safeHtml(qItem.performer_name)}</span>`;
+          reserveBtnHtml = `<button type="button" disabled class="btn-pink text-[11px] py-1.5 px-3.5 w-full sm:w-40 text-center">⏳ Reserved</button>`;
         }
       } else {
         const limitReached = CURRENT_USER && myActiveCount >= MAX_SINGER_QUEUE;
         reserveBtnHtml = `
-          <button type="button" onclick="reserveSong(${sid})" ${limitReached ? 'disabled title="Max 3 songs reserved"' : ''} class="btn-pink w-full">
-            🎤 ${limitReached ? 'Max 3 Reserved' : 'Reserve This Song'}
+          <button type="button" onclick="reserveSong(${sid})" ${limitReached ? 'disabled title="Max 3 songs reserved"' : ''} class="btn-pink text-[11px] py-1.5 px-3.5 w-full sm:w-40 text-center">
+            🎤 ${limitReached ? 'Max 3 Reserved' : 'Reserve'}
           </button>
         `;
       }
 
-      let bandControlsHtml = "";
+      let bandStripHtml = "";
       if (bandMode) {
         const vetoInfo = Array.isArray(s.vetoed_by) && s.vetoed_by.length
-          ? `<span class="px-2 py-0.5 rounded text-[11px] font-bold bg-amber-950/80 text-amber-300 border border-amber-500/40">⚠️ Vetoed by: ${safeHtml(s.vetoed_by.join(", "))}</span>`
+          ? `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-950/80 text-amber-300 border border-amber-500/40">⚠️ Vetoed: ${safeHtml(s.vetoed_by.join(", "))}</span>`
           : "";
-        bandControlsHtml = `
-          <div class="toogin-subcard p-2.5 mt-2 flex flex-wrap items-center justify-between gap-2 text-[11px]">
+        bandStripHtml = `
+          <div class="mt-2 ml-0 sm:ml-[50px] pt-2 border-t flex flex-wrap items-center justify-between gap-2 text-[11px]" style="border-color: var(--border-color);">
             <div class="flex flex-wrap items-center gap-1.5 font-mono">
               <span class="px-2 py-0.5 rounded font-bold" style="background: var(--cyan-badge-bg); color: var(--cyan-badge-text); border: 1px solid var(--cyan-badge-border);">
                 Toogin Key: ${safeHtml(s.toogin_preferred_key || origKey)}
@@ -928,7 +1189,7 @@
               </span>
               ${vetoInfo}
             </div>
-            <button type="button" onclick="openBandModal(${sid})" class="btn-cyan text-[11px] py-1 px-3">
+            <button type="button" onclick="openBandModal(${sid})" class="btn-cyan text-[10px] py-1 px-2.5">
               🎸 Band Chart &amp; Info
             </button>
           </div>
@@ -936,34 +1197,32 @@
       }
 
       return `
-        <div class="space-y-2">
-          <div class="flex items-start justify-between gap-2">
-            <div>
-              <h3 class="text-base font-extrabold leading-snug" style="color: var(--primary-pink);">${safeHtml(s.song_name)}</h3>
-              <p class="text-xs font-bold opacity-85">
-                ${safeHtml(s.artist)}${albumMeta ? ` <span class="font-normal opacity-75">• ${safeHtml(albumMeta)}</span>` : ""}
-              </p>
+        <div id="karaokeRow_${sid}" class="monolith-row ${isPreviewing ? 'is-previewing' : ''}">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+            <div class="flex items-center gap-3 min-w-0 flex-1">
+              ${buildPlayTriggerHtml(s)}
+              <div class="min-w-0 flex-1">
+                <div class="flex flex-wrap items-center gap-1.5">
+                  <h3 class="text-sm sm:text-[15px] font-extrabold leading-tight truncate" style="color: var(--primary-pink);">${safeHtml(s.song_name)}</h3>
+                  ${wasPlayed ? `<span class="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-950 text-emerald-300 border border-emerald-500/40">✓ Played</span>` : ""}
+                  ${statusInlineBadge}
+                </div>
+                <p class="text-xs font-semibold opacity-85 truncate mt-0.5">
+                  ${safeHtml(s.artist)}${albumMeta ? ` <span class="font-normal opacity-65">• ${safeHtml(albumMeta)}</span>` : ""}
+                </p>
+              </div>
             </div>
-            <div class="flex items-center gap-1.5 shrink-0">
-              ${wasPlayed ? `<span class="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-950 text-emerald-300 border border-emerald-500/40">✓ Played Tonight</span>` : ""}
-              <span class="px-2.5 py-1 rounded-lg text-xs font-mono font-extrabold" style="background: var(--subcard-bg); border: 1px solid var(--border-color);">
-                Orig Key: ${safeHtml(origKey)}
+
+            <div class="flex items-center justify-between sm:justify-end gap-2.5 shrink-0 pl-[50px] sm:pl-0">
+              <span class="px-2.5 py-1 rounded-lg text-[11px] font-mono font-bold whitespace-nowrap"
+                style="background: var(--subcard-bg); border: 1px solid var(--border-color);"
+                title="Original Key — custom key options confirmed with the band">
+                ${safeHtml(origKey)}
               </span>
+              ${reserveBtnHtml}
             </div>
           </div>
-
-          <!-- End-User Greyed-Out Song Key Dropdown -->
-          <div class="pt-1">
-            <select disabled class="toogin-input w-full text-xs opacity-60 cursor-not-allowed" title="Available key options will be confirmed with the band">
-              <option>Song Key Option: Original Key (${safeHtml(origKey)}) — Custom Keys TBD</option>
-            </select>
-          </div>
-
-          ${bandControlsHtml}
-
-          <div class="pt-1">
-            ${reserveBtnHtml}
-          </div>
+          ${bandStripHtml}
         </div>
       `;
     }
@@ -999,50 +1258,32 @@
         if (btn) btn.className = (f === SONG_FILTER) ? "btn-pink" : "btn-cyan";
       }
 
-      const grid = document.getElementById("songsGrid");
-      let visibleCount = 0;
-
+      const rowsHtml = [];
       for (const s of ACTIVE_SONGS) {
         const sid = Number(s.song_id);
         const qItem = activeQueueBySong.get(sid);
         const inQ = Boolean(qItem);
         const wasPlayed = completedSongs.has(sid);
 
-        let matches = true;
-        if (SONG_FILTER === "available" && inQ) matches = false;
-        if (SONG_FILTER === "queued" && !inQ) matches = false;
+        if (SONG_FILTER === "available" && inQ) continue;
+        if (SONG_FILTER === "queued" && !inQ) continue;
 
-        if (matches && q) {
+        if (q) {
           const hay = `${s.song_name || ""} ${s.artist || ""} ${s.album || ""} ${s.original_key || ""} ${s.toogin_preferred_key || ""}`.toLowerCase();
-          if (!hay.includes(q)) matches = false;
+          if (!hay.includes(q)) continue;
         }
 
-        let cardEl = CARD_DOM_CACHE.get(sid);
-        if (!cardEl) {
-          cardEl = document.createElement("div");
-          cardEl.id = `karaokeCard_${sid}`;
-          cardEl.className = "toogin-panel p-4 flex flex-col justify-between gap-3";
-          cardEl.innerHTML = `
-            <div id="karaokeCardDynamic_${sid}">
-              ${buildKaraokeCardDynamicHtml(s, qItem, wasPlayed, bandMode, myActiveCount)}
-            </div>
-            <div id="karaokeCardSpotify_${sid}" class="border-t pt-2" style="border-color: var(--border-color);">
-              ${renderEmbeddedSpotifyHtml(s)}
-            </div>
-          `;
-          CARD_DOM_CACHE.set(sid, cardEl);
-          grid.appendChild(cardEl);
-        } else {
-          const dynEl = document.getElementById(`karaokeCardDynamic_${sid}`);
-          if (dynEl) {
-            dynEl.innerHTML = buildKaraokeCardDynamicHtml(s, qItem, wasPlayed, bandMode, myActiveCount);
-          }
-        }
-
-        cardEl.classList.toggle("hidden", !matches);
-        if (matches) visibleCount++;
+        rowsHtml.push(buildKaraokeRowHtml(s, qItem, wasPlayed, bandMode, myActiveCount));
       }
 
+      const grid = document.getElementById("songsGrid");
+      grid.innerHTML = rowsHtml.join("");
+
+      const visibleCount = rowsHtml.length;
+      const metaEl = document.getElementById("visibleSongsMeta");
+      if (metaEl) metaEl.textContent = `(${visibleCount} of ${ACTIVE_SONGS.length})`;
+
+      document.getElementById("songsMonolith").classList.toggle("hidden", visibleCount === 0);
       document.getElementById("emptySongsNotice").classList.toggle("hidden", visibleCount > 0);
     }
 
