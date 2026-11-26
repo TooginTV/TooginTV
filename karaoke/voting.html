@@ -732,19 +732,31 @@
     }
 
     async function signInWithProvider(provider) {
-      setAuthMsg(`Redirecting to ${provider}...`);
-      const redirectTo = window.location.origin + window.location.pathname;
-      const { error } = await sb.auth.signInWithOAuth({ provider, options: { redirectTo } });
-      if (error) setAuthMsg(error.message, true);
+      try {
+        setAuthMsg(`Redirecting to ${provider}...`);
+        const redirectTo = window.location.origin + window.location.pathname;
+        const { error } = await sb.auth.signInWithOAuth({ provider, options: { redirectTo } });
+        if (error) setAuthMsg(error.message, true);
+      } catch (err) {
+        setAuthMsg(err?.message || String(err), true);
+      }
     }
 
     async function handleEmailLogin(e) {
       e.preventDefault();
-      setAuthMsg("Signing in...");
-      const email = document.getElementById("loginEmail").value.trim();
-      const password = document.getElementById("loginPassword").value;
-      const { error } = await sb.auth.signInWithPassword({ email, password });
-      if (error) setAuthMsg(error.message, true);
+      try {
+        setAuthMsg("Signing in...");
+        const email = document.getElementById("loginEmail").value.trim();
+        const password = document.getElementById("loginPassword").value;
+        const { data, error } = await sb.auth.signInWithPassword({ email, password });
+        if (error) return setAuthMsg(error.message, true);
+        setAuthMsg("");
+        if (data?.session) {
+          await syncAuthSession(data.session);
+        }
+      } catch (err) {
+        setAuthMsg(err?.message || String(err), true);
+      }
     }
 
     async function handleEmailSignup(e) {
@@ -820,22 +832,30 @@
       updateAuthUI();
     }
 
-    async function ensureUserProfile(user) {
-      const { data } = await sb.from("toogin_profiles").select("*").eq("id", user.id).maybeSingle();
-      if (data) {
-        CURRENT_PROFILE = data;
-        return;
-      }
+    function buildFallbackProfile(user) {
       const meta = user.user_metadata || {};
       const fullName = meta.full_name || meta.name || "";
       const parts = fullName.split(" ");
       const first_name = meta.first_name || parts[0] || "";
       const last_name = meta.last_name || parts.slice(1).join(" ") || "";
       const fallbackName = meta.performer_name || first_name || (user.email ? user.email.split("@")[0] : "Performer");
+      return { id: user.id, email: user.email || "", first_name, last_name, performer_name: fallbackName };
+    }
 
-      const newProf = { id: user.id, email: user.email || "", first_name, last_name, performer_name: fallbackName };
-      const { data: inserted } = await sb.from("toogin_profiles").upsert(newProf, { onConflict: "id" }).select("*").maybeSingle();
-      CURRENT_PROFILE = inserted || newProf;
+    async function ensureUserProfile(user) {
+      const fallbackProf = buildFallbackProfile(user);
+      try {
+        const { data, error } = await sb.from("toogin_profiles").select("*").eq("id", user.id).maybeSingle();
+        if (!error && data) {
+          CURRENT_PROFILE = data;
+          return;
+        }
+        const { data: inserted } = await sb.from("toogin_profiles").upsert(fallbackProf, { onConflict: "id" }).select("*").maybeSingle();
+        CURRENT_PROFILE = inserted || fallbackProf;
+      } catch (err) {
+        console.error("ensureUserProfile fallback:", err);
+        CURRENT_PROFILE = fallbackProf;
+      }
     }
 
     function openProfileModal() {
@@ -1234,20 +1254,36 @@
       document.getElementById("emptyFilterNotice").classList.toggle("hidden", visibleCount > 0);
     }
 
-    sb.auth.onAuthStateChange(async (event, session) => {
+    let AUTH_SYNC_SEQ = 0;
+
+    async function syncAuthSession(session) {
+      const seq = ++AUTH_SYNC_SEQ;
+      try {
+        if (session?.user) {
+          CURRENT_USER = session.user;
+          await ensureUserProfile(session.user);
+          if (seq !== AUTH_SYNC_SEQ) return;
+          updateAuthUI();
+          await loadVotingData();
+        } else {
+          CURRENT_USER = null;
+          CURRENT_PROFILE = null;
+          updateAuthUI();
+        }
+      } catch (err) {
+        console.error("Auth session sync error:", err);
+        updateAuthUI();
+      }
+    }
+
+    // Never await Supabase DB queries directly inside onAuthStateChange (causes navigator.locks deadlock in supabase-js v2)
+    sb.auth.onAuthStateChange((event, session) => {
       if (event === "PASSWORD_RECOVERY") {
         document.getElementById("recoveryModal").classList.remove("hidden");
       }
-      if (session?.user) {
-        CURRENT_USER = session.user;
-        await ensureUserProfile(session.user);
-        updateAuthUI();
-        await loadVotingData();
-      } else {
-        CURRENT_USER = null;
-        CURRENT_PROFILE = null;
-        updateAuthUI();
-      }
+      setTimeout(() => {
+        syncAuthSession(session);
+      }, 0);
     });
 
     sb.channel("toogin_live_vetoes")
@@ -1258,6 +1294,16 @@
         if (CURRENT_USER) loadVotingData();
       })
       .subscribe();
+
+    (async function bootstrapVoting() {
+      try {
+        const { data } = await sb.auth.getSession();
+        await syncAuthSession(data?.session || null);
+      } catch (err) {
+        console.error("Bootstrap session error:", err);
+        updateAuthUI();
+      }
+    })();
   </script>
 </body>
 </html>

@@ -424,19 +424,30 @@
     }
 
     async function signInWithProvider(provider) {
-      const redirectTo = window.location.origin + window.location.pathname;
-      const { error } = await sb.auth.signInWithOAuth({ provider, options: { redirectTo } });
-      if (error) showToast(error.message, true);
+      try {
+        const redirectTo = window.location.origin + window.location.pathname;
+        const { error } = await sb.auth.signInWithOAuth({ provider, options: { redirectTo } });
+        if (error) showToast(error.message, true);
+      } catch (err) {
+        showToast("Sign-in error: " + (err?.message || String(err)), true);
+      }
     }
 
     async function handleEmailLogin(e) {
       e.preventDefault();
-      const email = document.getElementById("loginEmail").value.trim();
-      const password = document.getElementById("loginPassword").value;
-      const { error } = await sb.auth.signInWithPassword({ email, password });
-      if (error) return showToast(error.message, true);
-      toggleAuthDrawer(false);
-      showToast("Signed in ✓");
+      try {
+        const email = document.getElementById("loginEmail").value.trim();
+        const password = document.getElementById("loginPassword").value;
+        const { data, error } = await sb.auth.signInWithPassword({ email, password });
+        if (error) return showToast(error.message, true);
+        toggleAuthDrawer(false);
+        showToast("Signed in ✓");
+        if (data?.session) {
+          await syncAuthSession(data.session);
+        }
+      } catch (err) {
+        showToast("Sign-in error: " + (err?.message || String(err)), true);
+      }
     }
 
     async function handleSignOut() {
@@ -898,17 +909,54 @@
       `;
     }
 
-    sb.auth.onAuthStateChange(async (_, session) => {
-      if (session?.user) {
-        CURRENT_USER = session.user;
-        const { data } = await sb.from("toogin_profiles").select("*").eq("id", session.user.id).maybeSingle();
-        CURRENT_PROFILE = data || null;
-      } else {
-        CURRENT_USER = null;
-        CURRENT_PROFILE = null;
+    let AUTH_SYNC_SEQ = 0;
+
+    function buildFallbackProfile(user) {
+      const meta = user.user_metadata || {};
+      const fullName = meta.full_name || meta.name || "";
+      const parts = fullName.split(" ");
+      const first_name = meta.first_name || parts[0] || "";
+      const last_name = meta.last_name || parts.slice(1).join(" ") || "";
+      const fallbackName = meta.performer_name || first_name || (user.email ? user.email.split("@")[0] : "Singer");
+      return { id: user.id, email: user.email || "", first_name, last_name, performer_name: fallbackName };
+    }
+
+    async function syncAuthSession(session) {
+      const seq = ++AUTH_SYNC_SEQ;
+      try {
+        if (session?.user) {
+          CURRENT_USER = session.user;
+          const fallbackProf = buildFallbackProfile(session.user);
+          try {
+            const { data, error } = await sb.from("toogin_profiles").select("*").eq("id", session.user.id).maybeSingle();
+            if (!error && data) {
+              CURRENT_PROFILE = data;
+            } else {
+              const { data: inserted } = await sb.from("toogin_profiles").upsert(fallbackProf, { onConflict: "id" }).select("*").maybeSingle();
+              CURRENT_PROFILE = inserted || fallbackProf;
+            }
+          } catch (profErr) {
+            console.error("Queue profile load fallback:", profErr);
+            CURRENT_PROFILE = fallbackProf;
+          }
+        } else {
+          CURRENT_USER = null;
+          CURRENT_PROFILE = null;
+        }
+        if (seq !== AUTH_SYNC_SEQ) return;
+        updateHeaderControls();
+        await loadQueueData();
+      } catch (err) {
+        console.error("Queue auth session sync error:", err);
+        updateHeaderControls();
       }
-      updateHeaderControls();
-      await loadQueueData();
+    }
+
+    // Never await Supabase DB queries directly inside onAuthStateChange (causes navigator.locks deadlock in supabase-js v2)
+    sb.auth.onAuthStateChange((_, session) => {
+      setTimeout(() => {
+        syncAuthSession(session);
+      }, 0);
     });
 
     sb.channel("toogin_queue_live")
@@ -916,7 +964,15 @@
       .on("postgres_changes", { event: "*", schema: "public", table: "toogin_active_karaoke" }, () => loadQueueData())
       .subscribe();
 
-    loadQueueData();
+    (async function bootstrapQueue() {
+      try {
+        const { data } = await sb.auth.getSession();
+        await syncAuthSession(data?.session || null);
+      } catch (err) {
+        console.error("Queue bootstrap session error:", err);
+        await loadQueueData();
+      }
+    })();
   </script>
 </body>
 </html>
